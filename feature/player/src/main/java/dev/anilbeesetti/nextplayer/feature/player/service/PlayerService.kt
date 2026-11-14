@@ -957,6 +957,7 @@ class PlayerService : MediaSessionService() {
             .build()
             .also {
                 it.setPlaybackSpeed(playerPreferences.defaultPlaybackSpeed)
+                it.setSeekParameters(androidx.media3.exoplayer.SeekParameters.CLOSEST_SYNC)
                 it.addListener(playbackStateListener)
                 it.pauseAtEndOfMediaItems = !playerPreferences.autoplay
                 it.repeatMode = when (playerPreferences.loopMode) {
