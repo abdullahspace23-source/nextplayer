@@ -938,6 +938,7 @@ class PlayerService : MediaSessionService() {
         val player = ExoPlayer.Builder(applicationContext)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
+            .setLoadControl(androidx.media3.exoplayer.DefaultLoadControl.Builder().setBufferDurationsMs(15_000, 50_000, 500, 1_000).build())
             .setMediaSourceFactory(
                 ExternalAudioMediaSourceFactory(
                     ApiMediaSourceFactory(
