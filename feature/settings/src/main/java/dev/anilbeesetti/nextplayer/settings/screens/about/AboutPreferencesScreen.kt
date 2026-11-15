@@ -314,13 +314,13 @@ fun AboutApp(
             }
         }
 
-        /*
+        
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Button(
-                onClick = onLibrariesClick,
+                onClick = {},
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = .12f),
@@ -334,7 +334,7 @@ fun AboutApp(
                     .weight(weight = 1f),
             ) { Text(text = stringResource(R.string.libraries)) }
             Button(
-                onClick = onGithubClick,
+                onClick = {},
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colorScheme.onTertiary,
                     disabledContentColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = .12f),
@@ -356,12 +356,12 @@ fun AboutApp(
                 Text(text = stringResource(R.string.github))
             }
         }
-        */
+        /*
 Text(
     text = "This is an ultimate video player designed to play all types of videos—not to play with your heart. So, feel free to enjoy it without any worries. 😘",
     style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
-)
+) */
     }
 }
 
