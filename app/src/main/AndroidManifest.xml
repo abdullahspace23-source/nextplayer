@@ -39,6 +39,7 @@
             android:name=".MainActivity"
             android:banner="@drawable/tv_banner"
             android:exported="true"
+            android:label="MOB Player"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
