@@ -227,7 +227,7 @@ Column(
         isFirstItem = true,
     )
     ClickablePreferenceItem(
-        title = "4KHdHub",
+        title = "4KHdHub l Daddys Choice 👑",
         description = "A Dynamite by the mix of Quality & Quantity",
         icon = NextIcons.Play,
         onClick = {
