@@ -110,21 +110,20 @@ private fun PlayerPreferencesScreenContent(
                     description = if (state.preferences.controllerAutoHideTimeout == 0) {
                         stringResource(R.string.off)
                     } else {
-                        stringResource(
-                            R.string.seconds,
-                            state.preferences.controllerAutoHideTimeout,
-                        )
+                        state.preferences.controllerAutoHideTimeout.let {
+                            if (it % 2 == 0) "${it / 2} s" else "${it / 2}.5 s"
+                        }
                     },
                     icon = NextIcons.Timer,
                     value = state.preferences.controllerAutoHideTimeout.toFloat(),
-                    valueRange = 0.0f..600.0f,
+                    valueRange = 0.0f..20.0f,
                     onValueChange = {
                         onAction(PlayerPreferencesUiEvent.UpdateControlAutoHideTimeout(it.toInt()))
                     },
                     onReset = {
                         onAction(
                             PlayerPreferencesUiEvent.UpdateControlAutoHideTimeout(
-                                PlayerPreferences.DEFAULT_CONTROLLER_AUTO_HIDE_TIMEOUT,
+                                PlayerPreferences.DEFAULT_CONTROLLER_AUTO_HIDE_TIMEOUT * 2,
                             ),
                         )
                     },
@@ -133,7 +132,7 @@ private fun PlayerPreferencesScreenContent(
                         FilledIconButton(onClick = {
                             onAction(
                                 PlayerPreferencesUiEvent.UpdateControlAutoHideTimeout(
-                                    PlayerPreferences.DEFAULT_CONTROLLER_AUTO_HIDE_TIMEOUT,
+                                    PlayerPreferences.DEFAULT_CONTROLLER_AUTO_HIDE_TIMEOUT * 2,
                                 ),
                             )
                         }) {
