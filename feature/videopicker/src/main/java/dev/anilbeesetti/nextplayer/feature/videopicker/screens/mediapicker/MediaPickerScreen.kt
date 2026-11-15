@@ -1267,6 +1267,97 @@ private fun SelectionActionsSheet(
     }
 }
 
+@Suppress("UNUSED_PARAMETER")
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SelectionActionsSheet(
+    modifier: Modifier = Modifier,
+    show: Boolean,
+    contentFocusRequester: FocusRequester,
+    showRenameAction: Boolean,
+    showInfoAction: Boolean,
+    showHideAction: Boolean,
+    onPlayAction: () -> Unit,
+    onAddToPlaylistAction: () -> Unit,
+    onRenameAction: () -> Unit,
+    onShareAction: () -> Unit,
+    onCopyAction: () -> Unit,
+    onMoveAction: () -> Unit,
+    onInfoAction: () -> Unit,
+    onHideAction: () -> Unit,
+    onDeleteAction: () -> Unit,
+) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTelevision }
+    val firstActionFocusRequester = remember { FocusRequester() }
+    AnimatedVisibility(
+        modifier = modifier.windowInsetsPadding(
+            WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal),
+        ),
+        visible = show,
+        enter = slideInVertically { it },
+        exit = slideOutVertically { it },
+    ) {
+        val shape = MaterialTheme.shapes.largeIncreased.copy(
+            bottomStart = ZeroCornerSize,
+            bottomEnd = ZeroCornerSize,
+        )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        shape = shape,
+                    )
+                    .clip(shape = shape)
+                    .horizontalScroll(state = rememberScrollState())
+                    .thenIf(condition = isTv) {
+                        focusRestorer(fallback = firstActionFocusRequester).focusGroup()
+                            .focusProperties { up = contentFocusRequester }
+                    }
+                    .navigationBarsPadding()
+                    .padding(
+                        horizontal = 8.dp,
+                        vertical = 12.dp,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                if (showRenameAction) {
+                    SelectionAction(
+                        isTv = isTv,
+                        imageVector = NextIcons.Edit,
+                        title = stringResource(R.string.rename),
+                        onClick = onRenameAction,
+                    )
+                }
+                SelectionAction(
+                    modifier = Modifier.thenIf(condition = isTv) {
+                        focusRequester(focusRequester = firstActionFocusRequester)
+                    },
+                    isTv = isTv,
+                    imageVector = NextIcons.Share,
+                    title = stringResource(R.string.share),
+                    onClick = onShareAction,
+                )
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Move,
+                    title = stringResource(R.string.move),
+                    onClick = onMoveAction,
+                )
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Delete,
+                    title = stringResource(id = R.string.delete),
+                    onClick = onDeleteAction,
+                )
+            }
+        }
+    }
+}
 @PreviewScreenSizes
 @PreviewLightDark
 @Composable
