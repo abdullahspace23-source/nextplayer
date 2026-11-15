@@ -139,6 +139,7 @@ private fun AboutPreferencesScreenContent(
                 onLibrariesClick = { onAction(AboutPreferencesAction.OpenLibraries) },
             )
             ListSectionTitle(text = stringResource(id = R.string.donate))
+            /*
             Column(
                 verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
             ) {
@@ -209,6 +210,57 @@ private fun AboutPreferencesScreenContent(
                     isLastItem = true,
                 )
             }
+            */
+Column(
+    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+) {
+    ClickablePreferenceItem(
+        title = "アニメの世界",
+        description = "A One-stop Solution for all Anime",
+        icon = NextIcons.Play,
+        onClick = {
+            uriHandler.openUriOrShowToast(
+                uri = "https://www.animedubhindi.link/",
+                context = context,
+            )
+        },
+        isFirstItem = true,
+    )
+    ClickablePreferenceItem(
+        title = "4KHdHub",
+        description = "A Dynamite by the mix of Quality & Quantity",
+        icon = NextIcons.Play,
+        onClick = {
+            uriHandler.openUriOrShowToast(
+                uri = "https://4khdhub.one/",
+                context = context,
+            )
+        },
+    )
+    ClickablePreferenceItem(
+        title = "MovielinkBD",
+        description = "People’s Love, Good as Fuck",
+        icon = NextIcons.Play,
+        onClick = {
+            uriHandler.openUriOrShowToast(
+                uri = "https://movielinkbd.tv/",
+                context = context,
+            )
+        },
+    )
+    ClickablePreferenceItem(
+        title = "OlA Movies",
+        description = "The Quality you poors can't afford",
+        icon = NextIcons.Play,
+        onClick = {
+            uriHandler.openUriOrShowToast(
+                uri = "https://v6.olamovies.mov/",
+                context = context,
+            )
+        },
+        isLastItem = true,
+    )
+}
         }
     }
 }
