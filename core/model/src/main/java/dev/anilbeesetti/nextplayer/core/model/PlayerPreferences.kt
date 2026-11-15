@@ -38,7 +38,7 @@ data class PlayerPreferences(
     val brightnessGestureSensitivity: Float = DEFAULT_BRIGHTNESS_GESTURE_SENSITIVITY,
 
     // Player Interface
-    val controllerAutoHideTimeout: Int = DEFAULT_CONTROLLER_AUTO_HIDE_TIMEOUT,
+    val controllerAutoHideTimeout: Int = DEFAULT_CONTROLLER_AUTO_HIDE_TIMEOUT * 2,
     val controlButtonsPosition: ControlButtonsPosition = ControlButtonsPosition.LEFT,
     val hidePlayerButtonsBackground: Boolean = false,
     val useMaterialYouControls: Boolean = false,
