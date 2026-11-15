@@ -314,6 +314,7 @@ fun AboutApp(
             }
         }
 
+        /*
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -355,6 +356,12 @@ fun AboutApp(
                 Text(text = stringResource(R.string.github))
             }
         }
+        */
+Text(
+    text = "This is an ultimate video player designed to play all types of videos—not to play with your heart. So, feel free to enjoy it without any worries. 😘",
+    style = MaterialTheme.typography.bodyMedium,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+)
     }
 }
 
