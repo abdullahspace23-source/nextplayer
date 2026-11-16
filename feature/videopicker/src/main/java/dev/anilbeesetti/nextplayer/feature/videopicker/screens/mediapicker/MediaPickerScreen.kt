@@ -415,4 +415,390 @@ internal fun MediaPickerScreenContent(
                     modifier = Modifier
                         .tvFocusRing(shape = MaterialTheme.shapes.large)
                         .focusProperties { if (isTv && hasMedia) up = focusState.requester },
-                    shape = Mate
+shape = MaterialTheme.shapes.large,
+                ) {
+                    Icon(
+                        imageVector = NextIcons.Play,
+                        contentDescription = stringResource(R.string.play),
+                    )
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    ) { scaffoldPadding ->
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(scaffoldPadding.copy(bottom = 0.dp))
+                .clip(
+                    shape = RoundedCornerShape(
+                        topStart = 24.dp,
+                        topEnd = 24.dp,
+                    ),
+                )
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            if (!permissionState.status.isGranted) {
+                PermissionMissingView(
+                    isGranted = permissionState.status.isGranted,
+                    showRationale = permissionState.status.shouldShowRationale,
+                    permission = permissionState.permission,
+                    launchPermissionRequest = { permissionState.launchPermissionRequest() },
+                ) {}
+                return@Scaffold
+            }
+            when (state.mediaDataState) {
+                is DataState.Error -> {
+                }
+
+                is DataState.Loading -> {
+                    CenterCircularProgressBar()
+                }
+
+                is DataState.Success -> {
+                    val successContent: @Composable () -> Unit = {
+                        val updatedScaffoldPadding = scaffoldPadding.copy(
+                            top = 0.dp,
+                            start = 0.dp,
+                            bottom =
+                                scaffoldPadding.calculateBottomPadding() + navigationBottomPadding,
+                        )
+                        val mediaHolder = state.mediaDataState.value
+                        if (mediaHolder == null ||
+                            (mediaHolder.folders.isEmpty() && mediaHolder.videos.isEmpty())
+                        ) {
+                            NoVideosFound(contentPadding = updatedScaffoldPadding)
+                        } else {
+                            MediaView(
+                                recentlyPlayedVideo = state.recentlyPlayedVideo,
+                                recentlyPlayedFolder = state.recentlyPlayedFolder,
+                                mediaHolder = mediaHolder,
+                                preferences = state.preferences,
+                                onFolderClick = {
+                                    onAction(MediaPickerAction.OnFolderClick(folderPath = it))
+                                },
+                                onVideoClick = {
+                                    onAction(MediaPickerAction.OnPlayVideo(uri = it))
+                                },
+                                selectionManager = selectionManager,
+                                lazyGridState = lazyGridState,
+                                focusState = focusState,
+                                contentPadding = updatedScaffoldPadding,
+                            )
+                        }
+                    }
+                    if (isTv) {
+                        successContent()
+                    } else {
+                        PullToRefreshBox(
+                            isRefreshing = state.refreshing,
+                            onRefresh = { onAction(MediaPickerAction.Refresh) },
+                        ) { successContent() }
+                    }
+                }
+            }
+        }
+    }
+
+    BackHandler(enabled = selectionManager.isInSelectionMode) {
+        selectionManager.exitSelectionMode()
+    }
+
+    if (showQuickSettingsDialog) {
+        QuickSettingsDialog(
+            applicationPreferences = state.preferences,
+            onDismiss = { showQuickSettingsDialog = false },
+            updatePreferences = { onAction(MediaPickerAction.UpdateMenu(preferences = it)) },
+        )
+    }
+
+    showRenameActionFor?.let { video ->
+        RenameDialog(
+            name = video.displayName,
+            onDismiss = { showRenameActionFor = null },
+            onDone = {
+                onAction(
+                    MediaPickerAction.RenameVideo(
+                        video.uriString.toUri(),
+                        to = it,
+                    ),
+                )
+                selectionManager.exitSelectionMode()
+                showRenameActionFor = null
+            },
+        )
+    }
+
+    val renameFolderPath = showRenameFolderPath
+    val renameFolderName = showRenameFolderName
+    if (renameFolderPath != null && renameFolderName != null) {
+        RenameDialog(
+            name = renameFolderName,
+            onDismiss = {
+                showRenameFolderPath = null
+                showRenameFolderName = null
+            },
+            onDone = { newName ->
+                onAction(
+                    MediaPickerAction.RenameFolder(
+                        path = renameFolderPath,
+                        to = newName,
+                    ),
+                )
+                selectionManager.exitSelectionMode()
+                showRenameFolderPath = null
+                showRenameFolderName = null
+            },
+        )
+    }
+
+    state.mediaInfo?.let { mediaInfo ->
+        MediaInfoDialog(
+            mediaInfo = mediaInfo,
+            onDismiss = { onAction(MediaPickerAction.DismissMediaInfo) },
+        )
+    }
+
+    if (showDeleteVideosConfirmation) {
+        DeleteConfirmationDialog(
+            selectionItems = selectionManager.selectionItems,
+            trashSupported = MediaOperationsService.supportsTrash(),
+            onConfirm = { permanently ->
+                onAction(
+                    MediaPickerAction.DeleteSelectedItems(
+                        selectionManager.selectionItems,
+                        permanently = permanently,
+                    ),
+                )
+                selectionManager.exitSelectionMode()
+                showDeleteVideosConfirmation = false
+            },
+            onCancel = { showDeleteVideosConfirmation = false },
+        )
+    }
+
+    HideFlowDialogs(
+        hideFlow = state.hideFlow,
+        onConfirmHide = { onAction(MediaPickerAction.ConfirmHidePendingItems) },
+        onSetPinAndHide = { onAction(MediaPickerAction.SetVaultPinAndHide(pin = it)) },
+        onBiometricSetupComplete = {
+            onAction(MediaPickerAction.CompleteBiometricSetup(enabled = it))
+        },
+        onDismiss = { onAction(MediaPickerAction.DismissHideFlow) },
+    )
+
+    (state.transferFlow as? TransferFlowState.Processing)?.let { transfer ->
+        TransferProgressDialog(
+            mode = transfer.mode,
+            progress = transfer.progress,
+            onCancel = { onAction(MediaPickerAction.CancelTransfer) },
+        )
+    }
+
+    if (state.addToPlaylistState.isVisible) {
+        PlaylistTargetDialog(
+            playlists = state.playlists,
+            state = state.addToPlaylistState,
+            onDismissRequest = { onAction(MediaPickerAction.DismissAddToPlaylist) },
+            onPlaylistSelected = {
+                onAction(MediaPickerAction.AddSelectionToPlaylist(playlistId = it))
+                selectionManager.exitSelectionMode()
+            },
+            onCreatePlaylist = {
+                onAction(MediaPickerAction.CreatePlaylistWithSelection(name = it))
+                selectionManager.exitSelectionMode()
+            },
+        )
+    }
+}
+
+@Composable
+private fun TransferProgressDialog(
+    mode: TransferMode,
+    progress: TransferProgress,
+    onCancel: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onCancel,
+        properties = DialogProperties(dismissOnClickOutside = false),
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 24.dp,
+                        vertical = 24.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                Text(
+                    text = when (mode) {
+                        TransferMode.COPY -> stringResource(R.string.copying_videos_in_progress)
+                        TransferMode.MOVE -> stringResource(R.string.moving_videos_in_progress)
+                    },
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                ProgressSection(
+                    label = progress.currentName.orEmpty(),
+                    fraction = progress.currentFraction,
+                )
+
+                if (progress.totalFiles > 1) {
+                    ProgressSection(
+                        label = stringResource(
+                            R.string.transfer_file_progress,
+                            progress.currentIndex + 1,
+                            progress.totalFiles,
+                        ),
+                        fraction = progress.overallFraction,
+                    )
+                }
+
+                TextButton(
+                    onClick = onCancel,
+                    modifier = Modifier.align(Alignment.End),
+                ) { Text(text = stringResource(R.string.cancel)) }
+            }
+        }
+    }
+}
+
+/**
+ * A labelled progress bar. A null [fraction] renders an indeterminate bar with no percentage.
+ */
+@Composable
+private fun ProgressSection(label: String, fraction: Float?) {
+    val animatedFraction by animateFloatAsState(
+        targetValue = fraction ?: 0f,
+        label = "progress",
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(weight = 1f),
+            )
+            if (fraction != null) {
+                Text(
+                    text = "${(fraction * 100).roundToInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        val barModifier = Modifier
+            .fillMaxWidth()
+            .clip(shape = CircleShape)
+        if (fraction != null) {
+            LinearProgressIndicator(
+                progress = { animatedFraction },
+                modifier = barModifier,
+            )
+        } else {
+            LinearProgressIndicator(modifier = barModifier)
+        }
+    }
+}
+
+@Composable
+private fun DeleteConfirmationDialog(
+    modifier: Modifier = Modifier,
+    selectionItems: Set<SelectionItem>,
+    trashSupported: Boolean,
+    onConfirm: (Boolean) -> Unit,
+    onCancel: () -> Unit,
+) {
+    val selectedVideos = selectionItems.filterIsInstance<SelectionItem.Video>()
+    val selectedFolders = selectionItems.filterIsInstance<SelectionItem.Folder>()
+    var permanently by rememberSaveable { mutableStateOf(value = false) }
+
+    NextDialog(
+        onDismissRequest = onCancel,
+        title = {
+            Text(
+                text = when {
+                    selectedVideos.isEmpty() -> when (selectedFolders.size) {
+                        1 -> stringResource(R.string.delete_one_folder)
+
+                        else -> stringResource(
+                            R.string.delete_folders,
+                            selectedFolders.size,
+                        )
+                    }
+
+                    selectedFolders.isEmpty() -> when (selectedVideos.size) {
+                        1 -> stringResource(R.string.delete_one_video)
+
+                        else -> stringResource(
+                            R.string.delete_videos,
+                            selectedVideos.size,
+                        )
+                    }
+
+                    else -> stringResource(
+                        R.string.delete_items,
+                        selectedFolders.size + selectedVideos.size,
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(permanently || !trashSupported) },
+                modifier = modifier,
+            ) {
+                Text(
+                    text = stringResource(
+                        id = if (permanently || !trashSupported) {
+                            R.string.delete
+                        } else {
+                            R.string.move_to_trash
+                        },
+                    ),
+                )
+            }
+        },
+        dismissButton = { CancelButton(onClick = onCancel) },
+        modifier = modifier,
+        content = {
+            Text(
+                text = if (permanently || !trashSupported) {
+                    if ((selectedFolders.size + selectedVideos.size) == 1) {
+                        stringResource(R.string.delete_item_info)
+                    } else {
+                        stringResource(R.string.delete_items_info)
+                    }
+                } else {
+                    stringResource(R.string.move_to_trash_info)
+                },
+                style = MaterialTheme.typography.titleSmall,
+            )
+            if (trashSupported) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = permanently,
+                        onCheckedChange = { permanently = it },
+                    )
+                    Text(text = stringResource(R.string.delete_permanently))
+                }
+            }
+        },
+    )
+}                    shape = Mate
