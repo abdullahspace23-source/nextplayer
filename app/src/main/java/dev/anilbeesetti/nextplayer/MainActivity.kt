@@ -113,9 +113,15 @@ class MainActivity : FragmentActivity() {
         systemService.initialize(activity = this@MainActivity)
         mediaOperationsService.initialize(activity = this@MainActivity)
 
-        installSplashScreen().setKeepOnScreenCondition {
-            viewModel.state.value is MainActivityUiState.Loading
-        }
+        var splashDoneAt = 0L
+installSplashScreen().setKeepOnScreenCondition {
+    if (viewModel.state.value is MainActivityUiState.Loading) {
+        true
+    } else {
+        if (splashDoneAt == 0L) splashDoneAt = android.os.SystemClock.elapsedRealtime()
+        android.os.SystemClock.elapsedRealtime() - splashDoneAt < 500L
+    }
+}
 
         darkSystemBars = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
             Configuration.UI_MODE_NIGHT_YES
