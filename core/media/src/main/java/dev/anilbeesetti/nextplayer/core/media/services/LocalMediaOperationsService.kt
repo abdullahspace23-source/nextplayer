@@ -95,6 +95,163 @@ class LocalMediaOperationsService(private val context: Context) : MediaOperation
         }
     }
 
+    override suspend fun renameFolder(
+        oldPath: String,
+        newName: String,
+        uris: List<Uri>,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val cleanName = newName.trim()
+        if (cleanName.isEmpty() ||
+            cleanName == "." ||
+            cleanName == ".." ||
+            cleanName.contains('/') ||
+            cleanName.contains('\\')
+        ) {
+            return@withContext false
+        }
+
+        val oldDir = File(oldPath)
+        val parentDir = oldDir.parentFile ?: return@withContext false
+        if (cleanName == oldDir.name) return@withContext true
+
+        val newDir = File(parentDir, cleanName)
+        if (newDir.exists()) return@withContext false
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val mediaStoreUris = uris.filter { it.authority == MediaStore.AUTHORITY }
+            if (mediaStoreUris.isEmpty()) {
+                return@withContext runCatching { oldDir.renameTo(newDir) }.getOrDefault(false)
+            }
+            val granted = try {
+                requestWriteAccessR(uris = mediaStoreUris)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                false
+            }
+            if (!granted) return@withContext false
+
+            var anyUpdated = false
+            for (uri in mediaStoreUris) {
+                val loc = mediaStoreLocation(uri = uri) ?: continue
+                val fileParent = File(loc.path).parent ?: continue
+                val subSuffix = if (fileParent == oldDir.path) {
+                    ""
+                } else if (fileParent.startsWith(oldDir.path + File.separator)) {
+                    fileParent.removePrefix(oldDir.path + File.separator)
+                } else {
+                    continue
+                }
+                val oldTrail = if (subSuffix.isEmpty()) {
+                    "${oldDir.name}/"
+                } else {
+                    "${oldDir.name}/$subSuffix/"
+                }
+                val newTrail = if (subSuffix.isEmpty()) {
+                    "$cleanName/"
+                } else {
+                    "$cleanName/$subSuffix/"
+                }
+                val currentRel = loc.folder.relativePath
+                if (!currentRel.endsWith(oldTrail)) continue
+                val newRel = currentRel.removeSuffix(oldTrail) + newTrail
+
+                val updated = contentResolver.updateMedia(
+                    uri = uri,
+                    contentValues = ContentValues().apply {
+                        put(
+                            MediaStore.MediaColumns.RELATIVE_PATH,
+                            newRel,
+                        )
+                    },
+                )
+                if (updated) anyUpdated = true
+            }
+
+            if (anyUpdated) {
+                runCatching {
+                    oldDir.walkBottomUp().forEach { dir ->
+                        if (dir.isDirectory && dir.listFiles().isNullOrEmpty()) {
+                            dir.delete()
+                        }
+                    }
+                }
+            }
+            return@withContext anyUpdated
+        } else {
+            val granted = context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED ||
+                storagePermissionLauncher?.launch(
+                    input = Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                ) == true
+            if (!granted) return@withContext false
+
+            val renamed = runCatching { oldDir.renameTo(newDir) }.getOrDefault(false)
+            if (!renamed) return@withContext false
+
+            val pathsToScan = mutableListOf<String>()
+            for (uri in uris) {
+                val oldFilePath = context.getPath(uri = uri) ?: continue
+                if (oldFilePath.startsWith(oldDir.path + File.separator)) {
+                    val newFilePath = newDir.path + oldFilePath.removePrefix(oldDir.path)
+                    pathsToScan.add(oldFilePath)
+                    pathsToScan.add(newFilePath)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val loc = mediaStoreLocation(uri = uri)
+                        val fileParent = File(oldFilePath).parent
+                        val subSuffix = if (fileParent == oldDir.path) {
+                            ""
+                        } else if (fileParent != null &&
+                            fileParent.startsWith(oldDir.path + File.separator)
+                        ) {
+                            fileParent.removePrefix(oldDir.path + File.separator)
+                        } else {
+                            null
+                        }
+                        if (loc != null && subSuffix != null) {
+                            val oldTrail = if (subSuffix.isEmpty()) {
+                                "${oldDir.name}/"
+                            } else {
+                                "${oldDir.name}/$subSuffix/"
+                            }
+                            val newTrail = if (subSuffix.isEmpty()) {
+                                "$cleanName/"
+                            } else {
+                                "$cleanName/$subSuffix/"
+                            }
+                            if (loc.folder.relativePath.endsWith(oldTrail)) {
+                                contentResolver.updateMedia(
+                                    uri = uri,
+                                    contentValues = ContentValues().apply {
+                                        put(
+                                            MediaStore.MediaColumns.RELATIVE_PATH,
+                                            loc.folder.relativePath.removeSuffix(oldTrail) +
+                                                newTrail,
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                    } else {
+                        contentResolver.updateMedia(
+                            uri = uri,
+                            contentValues = ContentValues().apply {
+                                put(
+                                    MediaStore.Files.FileColumns.DATA,
+                                    newFilePath,
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+            if (pathsToScan.isNotEmpty()) {
+                context.scanPaths(paths = pathsToScan)
+            }
+            return@withContext true
+        }
+    }
+
     override suspend fun shareMedia(uris: List<Uri>) {
         val intent = Intent.createChooser(
             Intent().apply {
@@ -458,296 +615,4 @@ class LocalMediaOperationsService(private val context: Context) : MediaOperation
             target.relativePath,
         )
         val sameFilesystem = runCatching {
-            Os.stat(sourceFile.path).st_dev == Os.stat(folder.path).st_dev
-        }.getOrDefault(false)
-        if (!sameFilesystem) return DirectMoveResult.FALLBACK
-        currentCoroutineContext().ensureActive()
-        return withContext(NonCancellable) {
-            moveLegacyFile(
-                source,
-                sourceFile,
-                folder,
-            )
-        }
-    }
-
-    private suspend fun moveLegacyFile(uri: Uri, source: File, folder: File): DirectMoveResult {
-        var destination = File(
-            folder,
-            source.name,
-        )
-        var suffix = 0
-        var reserved = false
-        var moved = false
-        var rollbackReserved = false
-        try {
-            while (!destination.createNewFile()) {
-                suffix++
-                val extension = source.extension.takeIf {
-                    it.isNotEmpty()
-                }?.let { ".$it" }.orEmpty()
-                destination = File(
-                    folder,
-                    "${source.nameWithoutExtension} ($suffix)$extension",
-                )
-            }
-            reserved = true
-            if (!source.renameTo(destination)) return DirectMoveResult.FALLBACK
-            reserved = false
-            moved = true
-            if (contentResolver.updateMedia(
-                    uri = uri,
-                    contentValues = ContentValues().apply {
-                        put(
-                            MediaStore.MediaColumns.DATA,
-                            destination.path,
-                        )
-                        put(
-                            MediaStore.MediaColumns.DISPLAY_NAME,
-                            destination.name,
-                        )
-                    },
-                )
-            ) {
-                return DirectMoveResult.MOVED
-            }
-            val storedPath = runCatching { context.getPath(uri = uri) }.getOrNull()
-            if (storedPath == destination.path) return DirectMoveResult.MOVED
-            if (storedPath != source.path) return DirectMoveResult.FAILED
-            // Roll back only into a path reserved by this move, never over another file.
-            if (!source.createNewFile()) return DirectMoveResult.FAILED
-            rollbackReserved = true
-            if (!destination.renameTo(source)) return DirectMoveResult.FAILED
-            rollbackReserved = false
-            return DirectMoveResult.FALLBACK
-        } catch (_: Exception) {
-            return if (moved) DirectMoveResult.FAILED else DirectMoveResult.FALLBACK
-        } finally {
-            if (reserved) destination.delete()
-            if (rollbackReserved) source.delete()
-        }
-    }
-
-    private data class CopyResult(val uri: Uri, val bytes: Long)
-
-    private suspend fun copyToDocument(
-        source: Uri,
-        destinationDir: Uri,
-        name: String,
-        expectedSize: Long,
-        onProgress: suspend (Long) -> Unit,
-    ): CopyResult? {
-        val mimeType = MimeTypeMap.getSingleton()
-            .getMimeTypeFromExtension(File(name).extension.lowercase()) ?: "video/*"
-        val destUri = runCatching {
-            DocumentsContract.createDocument(
-                contentResolver,
-                destinationDir,
-                mimeType,
-                name,
-            )
-        }.getOrNull() ?: return null
-
-        return try {
-            val bytes = contentResolver.openInputStream(source)?.use { input ->
-                contentResolver.openOutputStream(destUri)?.use { output ->
-                    copyStream(
-                        input = input,
-                        output = output,
-                        expectedTotal = expectedSize,
-                        onCopied = onProgress,
-                    )
-                } ?: error(message = "Unable to open output stream for $destUri")
-            } ?: error(message = "Unable to open input stream for $source")
-            check(value = expectedSize <= 0 || bytes == expectedSize) {
-                "Incomplete copy of $source"
-            }
-            CopyResult(
-                uri = destUri,
-                bytes = bytes,
-            )
-        } catch (e: CancellationException) {
-            deleteDocumentQuietly(uri = destUri)
-            throw e
-        } catch (e: Exception) {
-            deleteDocumentQuietly(uri = destUri)
-            null
-        }
-    }
-
-    private fun deleteDocumentQuietly(uri: Uri) {
-        runCatching {
-            DocumentsContract.deleteDocument(
-                contentResolver,
-                uri,
-            )
-        }
-    }
-
-    private fun Uri.toTreeDocumentUri(): Uri = DocumentsContract.buildDocumentUriUsingTree(
-        this,
-        DocumentsContract.getTreeDocumentId(this),
-    )
-
-    private fun sizeOf(uri: Uri): Long = runCatching {
-        contentResolver.openFileDescriptor(
-            uri,
-            "r",
-        )?.use {
-            it.statSize.coerceAtLeast(minimumValue = 0)
-        }
-    }.getOrNull() ?: 0L
-
-    private suspend fun copyStream(
-        input: InputStream,
-        output: OutputStream,
-        expectedTotal: Long,
-        onCopied: suspend (Long) -> Unit,
-    ): Long {
-        val buffer = ByteArray(size = DEFAULT_BUFFER_SIZE)
-        val reportThreshold = maxOf(
-            a = expectedTotal / 100,
-            b = 64L * 1024,
-        )
-        var copied = 0L
-        var lastReported = 0L
-        while (true) {
-            currentCoroutineContext().ensureActive()
-            val read = input.read(buffer)
-            if (read < 0) break
-            output.write(
-                buffer,
-                0,
-                read,
-            )
-            copied += read
-            if (copied - lastReported >= reportThreshold) {
-                onCopied(copied)
-                lastReported = copied
-            }
-        }
-        output.flush()
-        onCopied(copied)
-        return copied
-    }
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private suspend fun requestWriteAccessR(uris: List<Uri>): Boolean = runMediaWriteRequests(
-        uris = uris.filter {
-            context.checkUriPermission(
-                it,
-                Process.myPid(),
-                Process.myUid(),
-                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-            ) != PackageManager.PERMISSION_GRANTED
-        },
-        itemExists = ::mediaExists,
-        request = ::requestWriteR,
-    )
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private suspend fun requestWriteR(uris: List<Uri>): Boolean = requestMediaAccess(
-        pendingIntent = MediaStore.createWriteRequest(
-            contentResolver,
-            uris,
-        ),
-    )
-
-    private suspend fun requestMediaAccess(pendingIntent: PendingIntent): Boolean =
-        mediaRequestLauncher?.launch(
-            input = IntentSenderRequest.Builder(pendingIntent = pendingIntent).build(),
-        )?.resultCode == Activity.RESULT_OK
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private suspend fun deleteMediaR(uris: List<Uri>): Boolean = runMediaRequests(
-        items = uris,
-        itemExists = ::mediaExists,
-        request = ::requestDeleteR,
-    )
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private suspend fun trashMediaR(uris: List<Uri>, trashed: Boolean = true): Boolean =
-        runMediaRequests(
-            items = uris,
-            itemExists = ::mediaExists,
-            request = {
-                requestTrashR(
-                    uris = it,
-                    trashed = trashed,
-                )
-            },
-        )
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private suspend fun requestTrashR(uris: List<Uri>, trashed: Boolean): Boolean =
-        requestMediaAccess(
-            pendingIntent = MediaStore.createTrashRequest(
-                contentResolver,
-                uris,
-                trashed,
-            ),
-        )
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private suspend fun requestDeleteR(uris: List<Uri>): Boolean = requestMediaAccess(
-        pendingIntent = MediaStore.createDeleteRequest(
-            contentResolver,
-            uris,
-        ),
-    )
-
-    private fun mediaExists(uri: Uri): Boolean = runCatching {
-        contentResolver.query(
-            uri,
-            arrayOf(BaseColumns._ID),
-            null,
-            null,
-            null,
-        )?.use { cursor -> cursor.moveToFirst() } == true
-    }.getOrDefault(defaultValue = false)
-
-    private suspend fun deleteMediaBelowR(uris: List<Uri>): Boolean = uris.map { uri ->
-        contentResolver.deleteMedia(uri = uri)
-    }.all { it }
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private suspend fun renameMediaR(uri: Uri, to: String): Boolean =
-        requestWriteAccessR(uris = listOf(element = uri)) && contentResolver.updateMedia(
-            uri = uri,
-            contentValues = ContentValues().apply {
-                put(
-                    MediaStore.MediaColumns.DISPLAY_NAME,
-                    to,
-                )
-            },
-        )
-
-    private suspend fun renameMediaBelowR(uri: Uri, to: String): Boolean = runCatching {
-        val oldFile = context.getPath(uri = uri)?.let { File(it) } ?: throw Error()
-        val newFile = File(
-            oldFile.parentFile,
-            to,
-        )
-        oldFile.renameTo(newFile).also { success ->
-            if (success) {
-                contentResolver.updateMedia(
-                    uri = uri,
-                    contentValues = ContentValues().apply {
-                        put(
-                            MediaStore.Files.FileColumns.DISPLAY_NAME,
-                            to,
-                        )
-                        put(
-                            MediaStore.Files.FileColumns.TITLE,
-                            to,
-                        )
-                        put(
-                            MediaStore.Files.FileColumns.DATA,
-                            newFile.path,
-                        )
-                    },
-                )
-            }
-        }
-    }.getOrNull() ?: false
-}
+            Os.stat(sourceFile.
