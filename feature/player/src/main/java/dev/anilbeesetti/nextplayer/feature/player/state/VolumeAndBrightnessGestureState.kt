@@ -119,7 +119,7 @@ class VolumeAndBrightnessGestureState(
 
         job?.cancel()
         job = coroutineScope.launch {
-            delay(1.seconds)
+            delay(0.seconds)
             activeGesture = null
             volumeChangePercentage = 0
             brightnessChangePercentage = 0
