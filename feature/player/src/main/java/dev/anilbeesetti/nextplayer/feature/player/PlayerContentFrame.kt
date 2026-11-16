@@ -3,6 +3,7 @@ package dev.anilbeesetti.nextplayer.feature.player
 import android.graphics.Rect
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -89,8 +90,8 @@ fun PlayerContentFrame(
         AnimatedVisibility(
             visible =
                 subtitleConfiguration.controlsVisible,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            enter = fadeIn(animationSpec = tween(durationMillis = 150)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 150)),
         ) {
             Box(
                 Modifier
