@@ -1267,8 +1267,8 @@ class PlayerService : MediaSessionService() {
     }
 
     private fun restoreDecoderChoices(mediaItem: MediaItem?) {
-        val videoMode = mediaItem?.mediaMetadata?.videoDecoderMode ?: DecoderMode.AUTO
-        val audioMode = mediaItem?.mediaMetadata?.audioDecoderMode ?: DecoderMode.AUTO
+        val videoMode = mediaItem?.mediaMetadata?.videoDecoderMode ?: DecoderMode.FFMPEG
+        val audioMode = mediaItem?.mediaMetadata?.audioDecoderMode ?: DecoderMode.FFMPEG
         decoderRecoveryManager.onUserSelection(
             DecoderTrackType.VIDEO,
             mode = videoMode,
