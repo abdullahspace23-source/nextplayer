@@ -157,7 +157,7 @@ private fun GesturePreferencesScreenContent(
                     icon = NextIcons.Sensitivity,
                     enabled = state.preferences.enableBrightnessSwipeGesture,
                     value = state.preferences.brightnessGestureSensitivity,
-                    valueRange = 0.1f..2.0f,
+                    valueRange = 0.1f..1.5f,
                     onValueChange = {
                         onAction(
                             GesturePreferencesUiEvent.UpdateBrightnessGestureSensitivity(
@@ -202,7 +202,7 @@ private fun GesturePreferencesScreenContent(
                     icon = NextIcons.Sensitivity,
                     enabled = state.preferences.enableVolumeSwipeGesture,
                     value = state.preferences.volumeGestureSensitivity,
-                    valueRange = 0.1f..2.0f,
+                    valueRange = 0.1f..1.5f,
                     onValueChange = {
                         onAction(
                             GesturePreferencesUiEvent.UpdateVolumeGestureSensitivity(value = it),
