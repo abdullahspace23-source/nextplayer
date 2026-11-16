@@ -94,7 +94,7 @@ fun ControlsTopView(
                 onClick = onDecoderClick,
             ) {
                 Text(
-                    text = stringResource((videoDecoderMode ?: DecoderMode.HARDWARE).labelRes),
+                    text = stringResource((videoDecoderMode ?: DecoderMode.FFMPEG).labelRes),
                     style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                 )
