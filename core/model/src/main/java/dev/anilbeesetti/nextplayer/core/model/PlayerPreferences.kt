@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PlayerPreferences(
     val resume: Resume = Resume.YES,
-    val rememberPlayerBrightness: Boolean = false,
+    val rememberPlayerBrightness: Boolean = true,
     val playerBrightness: Float = 0.5f,
     val minDurationForFastSeek: Long = 120000L,
     val rememberSelections: Boolean = true,
@@ -14,7 +14,7 @@ data class PlayerPreferences(
     val defaultPlaybackSpeed: Float = 1.0f,
     val autoplay: Boolean = true,
     val enableTunneledPlayback: Boolean = false,
-    val autoPip: Boolean = true,
+    val autoPip: Boolean = false,
     val autoBackgroundPlay: Boolean = false,
     val loopMode: LoopMode = LoopMode.OFF,
 
@@ -30,7 +30,7 @@ data class PlayerPreferences(
     val useZoomControls: Boolean = true,
     val enablePanGesture: Boolean = false,
     val doubleTapGesture: DoubleTapGesture = DoubleTapGesture.BOTH,
-    val useLongPressControls: Boolean = false,
+    val useLongPressControls: Boolean = true,
     val longPressControlsSpeed: Float = 2.0f,
     val seekIncrement: Int = DEFAULT_SEEK_INCREMENT,
     val seekSensitivity: Float = DEFAULT_SEEK_SENSITIVITY,
