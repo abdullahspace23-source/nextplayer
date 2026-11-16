@@ -1,8 +1,9 @@
 package dev.anilbeesetti.nextplayer.feature.player.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,8 +72,8 @@ internal fun BoxScope.DpadSeekIndicator(visible: Boolean, offsetMs: Long, positi
     AnimatedVisibility(
         modifier = Modifier.align(Alignment.Center),
         visible = visible,
-        enter = EnterTransition.None,
-        exit = ExitTransition.None,
+        enter = fadeIn(animationSpec = tween(durationMillis = 80)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 80)),
     ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -124,25 +124,21 @@ internal fun BoxScope.PlayerGestureIndicators(tapGestureState: TapGestureState) 
             .padding(top = 24.dp)
             .align(Alignment.TopCenter),
         visible = tapGestureState.isLongPressGestureInAction,
-        enter = EnterTransition.None,
-        exit = ExitTransition.None,
+        enter = fadeIn(animationSpec = tween(durationMillis = 80)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 80)),
     ) {
-        Surface(shape = CircleShape) {
-            Row(
-                modifier = Modifier.padding(
-                    horizontal = 16.dp,
-                    vertical = 8.dp,
-                ),
-            ) {
-                Text(
-                    text = stringResource(
-                        coreUiR.string.fast_playback_speed,
-                        tapGestureState.longPressSpeed,
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
-        }
+        Text(
+            text = stringResource(
+                coreUiR.string.fast_playback_speed,
+                tapGestureState.longPressSpeed,
+            ),
+            style = MaterialTheme.typography.labelLarge,
+            color = Color.White,
+            modifier = Modifier.padding(
+                horizontal = 16.dp,
+                vertical = 8.dp,
+            ),
+        )
     }
 }
 
@@ -169,8 +165,8 @@ internal fun BoxScope.PlayerVerticalGestureIndicators(
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.CenterStart),
             visible = activeGesture == VerticalGesture.VOLUME,
-            enter = EnterTransition.None,
-            exit = ExitTransition.None,
+            enter = fadeIn(animationSpec = tween(durationMillis = 60)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 60)),
         ) {
             VerticalProgressView(
                 value = volumePercentage,
@@ -182,8 +178,8 @@ internal fun BoxScope.PlayerVerticalGestureIndicators(
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.CenterEnd),
             visible = activeGesture == VerticalGesture.BRIGHTNESS,
-            enter = EnterTransition.None,
-            exit = ExitTransition.None,
+            enter = fadeIn(animationSpec = tween(durationMillis = 60)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 60)),
         ) {
             VerticalProgressView(
                 value = brightnessPercentage,
