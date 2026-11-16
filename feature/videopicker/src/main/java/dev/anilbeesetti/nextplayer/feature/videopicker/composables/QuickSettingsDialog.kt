@@ -121,7 +121,7 @@ fun QuickSettingsDialog(
                             )
                         },
                     )
-                    FieldChip(
+                    /*FieldChip(
                         label = stringResource(id = R.string.extension),
                         selected = preferences.showExtensionField,
                         onClick = {
@@ -138,6 +138,7 @@ fun QuickSettingsDialog(
                                 preferences.copy(showPathField = !preferences.showPathField)
                         },
                     )
+                    */
                     FieldChip(
                         label = stringResource(id = R.string.played_progress),
                         selected = preferences.showPlayedProgress,
