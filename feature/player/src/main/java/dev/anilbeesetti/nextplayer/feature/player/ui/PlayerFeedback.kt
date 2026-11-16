@@ -1,9 +1,8 @@
 package dev.anilbeesetti.nextplayer.feature.player.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -73,8 +72,8 @@ internal fun BoxScope.DpadSeekIndicator(visible: Boolean, offsetMs: Long, positi
     AnimatedVisibility(
         modifier = Modifier.align(Alignment.Center),
         visible = visible,
-        enter = fadeIn(animationSpec = tween(durationMillis = 80)),
-        exit = fadeOut(animationSpec = tween(durationMillis = 80)),
+        enter = EnterTransition.None,
+        exit = ExitTransition.None,
     ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -125,8 +124,8 @@ internal fun BoxScope.PlayerGestureIndicators(tapGestureState: TapGestureState) 
             .padding(top = 24.dp)
             .align(Alignment.TopCenter),
         visible = tapGestureState.isLongPressGestureInAction,
-        enter = fadeIn(animationSpec = tween(durationMillis = 80)),
-        exit = fadeOut(animationSpec = tween(durationMillis = 80)),
+        enter = EnterTransition.None,
+        exit = ExitTransition.None,
     ) {
         Surface(shape = CircleShape) {
             Row(
@@ -170,8 +169,8 @@ internal fun BoxScope.PlayerVerticalGestureIndicators(
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.CenterStart),
             visible = activeGesture == VerticalGesture.VOLUME,
-            enter = fadeIn(animationSpec = tween(durationMillis = 60)),
-            exit = fadeOut(animationSpec = tween(durationMillis = 60)),
+            enter = EnterTransition.None,
+            exit = ExitTransition.None,
         ) {
             VerticalProgressView(
                 value = volumePercentage,
@@ -183,8 +182,8 @@ internal fun BoxScope.PlayerVerticalGestureIndicators(
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.CenterEnd),
             visible = activeGesture == VerticalGesture.BRIGHTNESS,
-            enter = fadeIn(animationSpec = tween(durationMillis = 60)),
-            exit = fadeOut(animationSpec = tween(durationMillis = 60)),
+            enter = EnterTransition.None,
+            exit = ExitTransition.None,
         ) {
             VerticalProgressView(
                 value = brightnessPercentage,
