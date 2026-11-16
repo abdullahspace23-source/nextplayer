@@ -1,11 +1,11 @@
 package dev.anilbeesetti.nextplayer.feature.player.model
 
 import androidx.annotation.StringRes
-// DecoderMode.HARDWARE,
+import dev.anilbeesetti.nextplayer.core.ui.R
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.DecoderMode
 
 val selectableDecoderModes = listOf(
-    DecoderMode.HARDWARE,
+    // DecoderMode.HARDWARE,
     DecoderMode.SOFTWARE,
     DecoderMode.FFMPEG,
 )
