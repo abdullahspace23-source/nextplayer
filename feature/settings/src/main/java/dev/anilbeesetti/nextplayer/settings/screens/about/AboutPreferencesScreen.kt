@@ -215,10 +215,10 @@ Column(
     verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
 ) {
     ClickablePreferenceItem(
-        title = "アニメの世界",
-        description = "A One-stop Solution for all Anime",
-        icon = NextIcons.Play,
-        onClick = {
+    title = "アニメの世界",
+    description = "A One-stop Solution for all Anime",
+    icon = ImageVector.vectorResource(R.drawable.ic_site_anime),
+    onClick = {
             uriHandler.openUriOrShowToast(
                 uri = "https://www.animedubhindi.link/",
                 context = context,
@@ -229,7 +229,7 @@ Column(
     ClickablePreferenceItem(
         title = "4KHdHub l Daddys Choice 👑",
         description = "A Dynamite by the mix of Quality & Quantity",
-        icon = NextIcons.Play,
+        icon = ImageVector.vectorResource(R.drawable.ic_site_4khdhub),
         onClick = {
             uriHandler.openUriOrShowToast(
                 uri = "https://4khdhub.one/",
@@ -240,7 +240,7 @@ Column(
     ClickablePreferenceItem(
         title = "MovielinkBD",
         description = "People’s Love, Good as Fuck",
-        icon = NextIcons.Play,
+        icon = ImageVector.vectorResource(R.drawable.ic_site_movielink),
         onClick = {
             uriHandler.openUriOrShowToast(
                 uri = "https://movielinkbd.tv/",
