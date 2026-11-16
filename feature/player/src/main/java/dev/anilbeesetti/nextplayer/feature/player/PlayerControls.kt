@@ -2,9 +2,8 @@ package dev.anilbeesetti.nextplayer.feature.player
 
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -60,8 +59,8 @@ fun PlayerControls(
         Column {
             AnimatedVisibility(
                 visible = controlsVisibilityState.controlsVisible,
-                enter = fadeIn(animationSpec = tween(durationMillis = 150)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 150)),
+                enter = EnterTransition.None,
+                exit = ExitTransition.None,
             ) {
                 ControlsTopView(
                     title = title,
@@ -78,8 +77,8 @@ fun PlayerControls(
                 visible =
                     controlsVisibilityState.controlsVisible &&
                         !controlsVisibilityState.controlsLocked,
-                enter = fadeIn(animationSpec = tween(durationMillis = 150)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 150)),
+                enter = EnterTransition.None,
+                exit = ExitTransition.None,
             ) {
                 ControlsBottomView(
                     player = player,
