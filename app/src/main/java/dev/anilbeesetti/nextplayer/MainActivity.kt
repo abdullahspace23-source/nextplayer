@@ -119,7 +119,7 @@ installSplashScreen().setKeepOnScreenCondition {
         true
     } else {
         if (splashDoneAt == 0L) splashDoneAt = android.os.SystemClock.elapsedRealtime()
-        android.os.SystemClock.elapsedRealtime() - splashDoneAt < 150L
+        android.os.SystemClock.elapsedRealtime() - splashDoneAt < 100L
     }
 }
 
