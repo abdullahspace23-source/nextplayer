@@ -25,7 +25,7 @@ data class ApplicationPreferences(
     val showDurationField: Boolean = true,
     val showFolderDurationField: Boolean = true,
     val showExtensionField: Boolean = false,
-    val showPathField: Boolean = true,
+    val showPathField: Boolean = false,
     val showResolutionField: Boolean = true,
     val showSizeField: Boolean = true,
     val showThumbnailField: Boolean = true,
