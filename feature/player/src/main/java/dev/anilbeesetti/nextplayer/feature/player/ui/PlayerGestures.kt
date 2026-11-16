@@ -14,10 +14,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
@@ -92,7 +94,13 @@ fun PlayerGestures(
                 .pointerInput(pictureInPictureState.isInPictureInPictureMode) {
                     if (pictureInPictureState.isInPictureInPictureMode) return@pointerInput
 
-                    detectTapGestures(
+                    val base = this
+                    val fast = object : PointerInputScope by base {
+                        override val viewConfiguration: ViewConfiguration = object : ViewConfiguration by base.viewConfiguration {
+                            override val doubleTapTimeoutMillis: Long = 150L
+                        }
+                    }
+                    fast.detectTapGestures(
                         onTap = {
                             if (tapGestureState.seekMillis != 0L) return@detectTapGestures
                             controlsVisibilityState.toggleControlsVisibility()
