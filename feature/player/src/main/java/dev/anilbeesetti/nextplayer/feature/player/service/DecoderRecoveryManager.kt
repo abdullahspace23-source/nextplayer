@@ -125,5 +125,5 @@ private fun DecoderMode.fallbackModes(): List<DecoderMode> = when (this) {
 
     DecoderMode.SOFTWARE -> listOf(DecoderMode.FFMPEG)
 
-    DecoderMode.FFMPEG -> listOf(DecoderMode.AUTO)
+    DecoderMode.FFMPEG -> listOf(DecoderMode.SOFTWARE)
 }
