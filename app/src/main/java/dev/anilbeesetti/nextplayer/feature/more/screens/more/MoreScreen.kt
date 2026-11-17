@@ -127,18 +127,6 @@ internal fun MoreScreenContent(state: MoreUiState, onAction: (MoreAction) -> Uni
                 ) {
                     FilledTonalButton(
                         modifier = Modifier.weight(weight = 1f).tvFocusRing(),
-                        onClick = { onAction(MoreAction.OpenVault) },
-                    ) {
-                        Icon(
-                            imageVector = NextIcons.Lock,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Text(text = stringResource(R.string.vault))
-                    }
-                    FilledTonalButton(
-                        modifier = Modifier.weight(weight = 1f).tvFocusRing(),
                         onClick = { filePicker.launch(input = "video/*") },
                     ) {
                         Icon(
@@ -162,7 +150,6 @@ internal fun MoreScreenContent(state: MoreUiState, onAction: (MoreAction) -> Uni
                             Spacer(modifier = Modifier.size(8.dp))
                             Text(text = stringResource(R.string.trash))
                         }
-                        Spacer(modifier = Modifier.weight(weight = 1f))
                     }
                 }
                 HistorySection(
