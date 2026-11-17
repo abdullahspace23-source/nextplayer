@@ -134,7 +134,7 @@ class TapGestureState(
         if (!isLongPressGestureInAction || containerWidth <= 0) return
 
         longPressDragPixels += dragAmountX
-        val sensitivityWidth = containerWidth * 0.75f
+        val sensitivityWidth = containerWidth * 0.50f
         val stepSize = 0.25f
         val speedDelta = (longPressDragPixels / sensitivityWidth) * 3.75f
         val baseSpeed = longPressSpeed.coerceIn(0.25f, 4.0f)
