@@ -1,5 +1,7 @@
 package dev.anilbeesetti.nextplayer.feature.player.ui
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -14,8 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -123,6 +127,27 @@ fun PlayerGestures(
                         },
                     )
                 }
+                .pointerInput(pictureInPictureState.isInPictureInPictureMode) {
+                    if (pictureInPictureState.isInPictureInPictureMode) return@pointerInput
+
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false)
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            val change = event.changes.firstOrNull() ?: break
+                            if (!change.pressed) break
+                            if (tapGestureState.isLongPressGestureInAction) {
+                                val dx = change.positionChange().x
+                                if (dx != 0f) {
+                                    tapGestureState.onLongPressDrag(
+                                        dragAmountX = dx,
+                                        containerWidth = size.width,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 .pointerInput(
                     seekGestureState,
                     gestureInsets,
@@ -136,12 +161,13 @@ fun PlayerGestures(
 
                     detectCustomHorizontalDragGestures(
                         shouldStartGesture = {
-                            gestureInsets.isPlayerGestureStart(
-                                it,
-                                size,
-                                density,
-                                layoutDirection,
-                            )
+                            !tapGestureState.isLongPressGestureInAction &&
+                                gestureInsets.isPlayerGestureStart(
+                                    it,
+                                    size,
+                                    density,
+                                    layoutDirection,
+                                )
                         },
                         onDragStart = seekGestureState::onDragStart,
                         onHorizontalDrag = seekGestureState::onDrag,
@@ -161,12 +187,13 @@ fun PlayerGestures(
 
                     detectCustomVerticalDragGestures(
                         shouldStartGesture = {
-                            gestureInsets.isPlayerGestureStart(
-                                it,
-                                size,
-                                density,
-                                layoutDirection,
-                            )
+                            !tapGestureState.isLongPressGestureInAction &&
+                                gestureInsets.isPlayerGestureStart(
+                                    it,
+                                    size,
+                                    density,
+                                    layoutDirection,
+                                )
                         },
                         onDragStart = {
                             volumeAndBrightnessGestureState.onDragStart(
