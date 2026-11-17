@@ -11,7 +11,7 @@ data class PlayerPreferences(
     val rememberSelections: Boolean = true,
     val playerScreenOrientation: ScreenOrientation = ScreenOrientation.VIDEO_ORIENTATION,
     val playerVideoZoom: VideoContentScale = VideoContentScale.BEST_FIT,
-    val defaultPlaybackSpeed: Float = 1.0f,
+    val defaultPlaybackSpeed: Float = 1.40f,
     val autoplay: Boolean = true,
     val enableTunneledPlayback: Boolean = false,
     val autoPip: Boolean = false,
@@ -49,7 +49,7 @@ data class PlayerPreferences(
     val pauseOnHeadsetDisconnect: Boolean = true,
     val requireAudioFocus: Boolean = true,
     val showSystemVolumePanel: Boolean = true,
-    val enableVolumeBoost: Boolean = false,
+    val enableVolumeBoost: Boolean = true,
 
     // Subtitle Preferences
     val useSystemCaptionStyle: Boolean = false,
