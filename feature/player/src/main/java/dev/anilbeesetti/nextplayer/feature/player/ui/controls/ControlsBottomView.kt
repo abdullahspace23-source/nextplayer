@@ -4,6 +4,7 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -94,6 +95,7 @@ fun ControlsBottomView(
     val isTv = remember { context.isTelevision }
     val timeButtonFocusRequester = remember { FocusRequester() }
     BoxWithConstraints(modifier = modifier) {
+        val useCompactControls = maxWidth < 600.dp && !isTv
         Column(
             modifier = Modifier
                 .padding(systemBarsPadding.copy(top = 0.dp))
@@ -198,6 +200,22 @@ fun ControlsBottomView(
                         }
                     }
                 }
+
+                if (!useCompactControls) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        PlaybackSpeedButton(
+                            player = player,
+                            onClick = onPlaybackSpeedClick,
+                        )
+
+                        if (!isTv) {
+                            RotateButton()
+                        }
+                    }
+                }
             }
             PlayerSeekbar(
                 position = progressState.currentPositionMs.toFloat(),
@@ -206,46 +224,88 @@ fun ControlsBottomView(
                 onSeek = { onSeek(it.toLong()) },
                 onSeekFinished = { onSeekEnd() },
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(state = rememberScrollState()),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(
-                    8.dp,
-                    alignment = controlsAlignment,
-                ),
-            ) {
-                PlayerButton(onClick = onLockControlsClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_lock_open),
-                        contentDescription = null,
-                    )
-                }
-                PlayerButton(
-                    onClick = onVideoContentScaleClick,
-                    onLongClick = onVideoContentScaleLongClick,
+            if (useCompactControls) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(state = rememberScrollState()),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(
+                        8.dp,
+                        alignment = controlsAlignment,
+                    ),
                 ) {
-                    Icon(
-                        painter = painterResource(videoContentScale.drawableRes()),
-                        contentDescription = null,
+                    PlayerButton(onClick = onLockControlsClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_lock_open),
+                            contentDescription = null,
+                        )
+                    }
+                    PlayerButton(
+                        onClick = onVideoContentScaleClick,
+                        onLongClick = onVideoContentScaleLongClick,
+                    ) {
+                        Icon(
+                            painter = painterResource(videoContentScale.drawableRes()),
+                            contentDescription = null,
+                        )
+                    }
+                    PreviousButton(player = player)
+                    PlayPauseButton(player = player)
+                    NextButton(player = player)
+                    PlayerButton(onClick = onPlaylistClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_playlist),
+                            contentDescription = null,
+                        )
+                    }
+                    PlaybackSpeedButton(
+                        player = player,
+                        onClick = onPlaybackSpeedClick,
                     )
-                }
-                PreviousButton(player = player)
-                PlayPauseButton(player = player)
-                NextButton(player = player)
-                PlayerButton(onClick = onPlaylistClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_playlist),
-                        contentDescription = null,
-                    )
-                }
-                PlaybackSpeedButton(
-                    player = player,
-                    onClick = onPlaybackSpeedClick,
-                )
-                if (!isTv) {
                     RotateButton()
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.align(Alignment.CenterStart),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        PlayerButton(onClick = onLockControlsClick) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_lock_open),
+                                contentDescription = null,
+                            )
+                        }
+                        PlayerButton(
+                            onClick = onVideoContentScaleClick,
+                            onLongClick = onVideoContentScaleLongClick,
+                        ) {
+                            Icon(
+                                painter = painterResource(videoContentScale.drawableRes()),
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.align(Alignment.Center),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        PreviousButton(player = player)
+                        PlayPauseButton(player = player)
+                        NextButton(player = player)
+                    }
+                    PlayerButton(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        onClick = onPlaylistClick,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_playlist),
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         }
