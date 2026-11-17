@@ -30,12 +30,7 @@ fun Activity.toggleSystemBars(showBars: Boolean, @Type.InsetsType types: Int = T
         window.decorView,
     ).apply {
         systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        if (showBars) {
-            hide(Type.statusBars())
-            show(Type.navigationBars())
-        } else {
-            hide(types)
-        }
+        hide(types)
     }
 }
 
