@@ -49,12 +49,13 @@ import dev.anilbeesetti.nextplayer.core.model.VideoContentScale
 import dev.anilbeesetti.nextplayer.core.ui.R
 import dev.anilbeesetti.nextplayer.core.ui.extensions.copy
 import dev.anilbeesetti.nextplayer.core.ui.theme.NextPlayerTheme
-import dev.anilbeesetti.nextplayer.feature.player.buttons.LoopButton
+import dev.anilbeesetti.nextplayer.feature.player.buttons.NextButton
+import dev.anilbeesetti.nextplayer.feature.player.buttons.PlayPauseButton
 import dev.anilbeesetti.nextplayer.feature.player.buttons.PlaybackSpeedButton
 import dev.anilbeesetti.nextplayer.feature.player.buttons.PlayerButton
 import dev.anilbeesetti.nextplayer.feature.player.buttons.PlayerButtonBlackAlpha
+import dev.anilbeesetti.nextplayer.feature.player.buttons.PreviousButton
 import dev.anilbeesetti.nextplayer.feature.player.buttons.RotateButton
-import dev.anilbeesetti.nextplayer.feature.player.buttons.ShuffleButton
 import dev.anilbeesetti.nextplayer.feature.player.extensions.drawableRes
 import dev.anilbeesetti.nextplayer.feature.player.state.ChaptersState
 import dev.anilbeesetti.nextplayer.feature.player.state.rememberChaptersState
@@ -84,6 +85,7 @@ fun ControlsBottomView(
     onPlayInBackgroundClick: () -> Unit,
     onSeek: (Long) -> Unit,
     onSeekEnd: () -> Unit,
+    onPlaylistClick: () -> Unit = {},
 ) {
     val systemBarsPadding = WindowInsets.systemBars.union(
         WindowInsets.displayCutout,
@@ -92,7 +94,6 @@ fun ControlsBottomView(
     val isTv = remember { context.isTelevision }
     val timeButtonFocusRequester = remember { FocusRequester() }
     BoxWithConstraints(modifier = modifier) {
-        val useCompactControls = maxWidth < 600.dp && !isTv
         Column(
             modifier = Modifier
                 .padding(systemBarsPadding.copy(top = 0.dp))
@@ -197,22 +198,6 @@ fun ControlsBottomView(
                         }
                     }
                 }
-
-                if (!useCompactControls) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        PlaybackSpeedButton(
-                            player = player,
-                            onClick = onPlaybackSpeedClick,
-                        )
-
-                        if (!isTv) {
-                            RotateButton()
-                        }
-                    }
-                }
             }
             PlayerSeekbar(
                 position = progressState.currentPositionMs.toFloat(),
@@ -246,11 +231,20 @@ fun ControlsBottomView(
                         contentDescription = null,
                     )
                 }
-                if (useCompactControls) {
-                    PlaybackSpeedButton(
-                        player = player,
-                        onClick = onPlaybackSpeedClick,
+                PreviousButton(player = player)
+                PlayPauseButton(player = player)
+                NextButton(player = player)
+                PlayerButton(onClick = onPlaylistClick) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_playlist),
+                        contentDescription = null,
                     )
+                }
+                PlaybackSpeedButton(
+                    player = player,
+                    onClick = onPlaybackSpeedClick,
+                )
+                if (!isTv) {
                     RotateButton()
                 }
             }
