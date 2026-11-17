@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutoutPadding
@@ -130,7 +129,7 @@ internal fun BoxScope.PlayerGestureIndicators(tapGestureState: TapGestureState) 
 
     AnimatedVisibility(
         modifier = Modifier
-            .padding(top = 24.dp)
+            .padding(top = 20.dp)
             .align(Alignment.TopCenter),
         visible = tapGestureState.isLongPressGestureInAction,
         enter = fadeIn(animationSpec = tween(durationMillis = 80)),
@@ -146,28 +145,28 @@ private fun LongPressSpeedIndicator(speed: Float) {
     val clampedSpeed = speed.coerceIn(0.25f, 4.0f)
     val fraction = speedToFraction(clampedSpeed)
     val ticks = listOf(0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f)
-    val textShadow = Shadow(color = Color.Black.copy(alpha = 0.7f), blurRadius = 4f)
+    val textShadow = Shadow(color = Color.Black.copy(alpha = 0.7f), blurRadius = 3f)
 
     Column(
         modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .widthIn(max = 300.dp),
+            .fillMaxWidth(0.85f)
+            .widthIn(max = 264.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Box(
-                modifier = Modifier.height(18.dp),
+                modifier = Modifier.height(14.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "0.25x",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 10.5.sp,
                         shadow = textShadow,
                     ),
                     fontWeight = if (clampedSpeed <= 0.25f) FontWeight.Bold else FontWeight.Medium,
@@ -187,7 +186,7 @@ private fun LongPressSpeedIndicator(speed: Float) {
                             Text(
                                 text = "${formatSpeed(tick)}x",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     shadow = textShadow,
                                 ),
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -210,21 +209,19 @@ private fun LongPressSpeedIndicator(speed: Float) {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(2.dp))
-
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(18.dp),
+                        .height(14.dp),
                 ) {
                     val trackY = size.height / 2f
                     val activeX = size.width * fraction
 
                     drawLine(
-                        color = Color.White.copy(alpha = 0.35f),
+                        color = Color(0xFF9E9E9E).copy(alpha = 0.55f),
                         start = Offset(0f, trackY),
                         end = Offset(size.width, trackY),
-                        strokeWidth = 3.dp.toPx(),
+                        strokeWidth = 2.5.dp.toPx(),
                         cap = StrokeCap.Round,
                     )
 
@@ -232,27 +229,27 @@ private fun LongPressSpeedIndicator(speed: Float) {
                         val tickX = size.width * ((index + 1) / 7f)
                         drawCircle(
                             color = Color.White,
-                            radius = 2.2.dp.toPx(),
+                            radius = 1.8.dp.toPx(),
                             center = Offset(tickX, trackY),
                         )
                     }
 
                     drawCircle(
                         color = activeBlue,
-                        radius = 5.5.dp.toPx(),
+                        radius = 4.5.dp.toPx(),
                         center = Offset(activeX, trackY),
                     )
                 }
             }
 
             Box(
-                modifier = Modifier.height(18.dp),
+                modifier = Modifier.height(14.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "4.0x",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 10.5.sp,
                         shadow = textShadow,
                     ),
                     fontWeight = if (clampedSpeed >= 4.0f) FontWeight.Bold else FontWeight.Medium,
@@ -263,18 +260,18 @@ private fun LongPressSpeedIndicator(speed: Float) {
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Icon(
                 painter = painterResource(coreUiR.drawable.ic_fast),
                 contentDescription = null,
                 tint = Color.White.copy(alpha = 0.75f),
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(14.dp),
             )
             Text(
                 text = "${formatSpeed(clampedSpeed)}x Speed Playing",
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontSize = 12.sp,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.5.sp,
                     shadow = textShadow,
                 ),
                 fontWeight = FontWeight.Medium,
