@@ -27,7 +27,6 @@ import dev.anilbeesetti.nextplayer.feature.player.state.seekToPositionFormated
 import dev.anilbeesetti.nextplayer.feature.player.ui.InfoView
 import dev.anilbeesetti.nextplayer.feature.player.ui.OverlayView
 import dev.anilbeesetti.nextplayer.feature.player.ui.controls.ControlsBottomView
-import dev.anilbeesetti.nextplayer.feature.player.ui.controls.ControlsMiddleView
 import dev.anilbeesetti.nextplayer.feature.player.ui.controls.ControlsTopView
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.DecoderMode
 
@@ -109,6 +108,7 @@ fun PlayerControls(
                         onShowOverlay(OverlayView.VIDEO_CONTENT_SCALE)
                     },
                     onPictureInPictureClick = onPictureInPictureClick,
+                    onPlaylistClick = { onShowOverlay(OverlayView.PLAYLIST) },
                 )
             }
         }
@@ -125,11 +125,6 @@ fun PlayerControls(
 
             videoZoomAndContentScaleState.showContentScaleIndicator -> InfoView(
                 info = stringResource(videoZoomAndContentScaleState.videoContentScale.nameRes()),
-            )
-
-            controlsVisibilityState.controlsVisible -> ControlsMiddleView(
-                player = player,
-                modifier = middleControlsModifier,
             )
         }
     }
