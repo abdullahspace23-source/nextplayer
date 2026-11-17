@@ -249,8 +249,8 @@ fun TopLevelNavState.isNavigationBetweenTopLevelDestinations(
 
 // Timings measured from the system activity transition (ColorOS 16 Settings), which apps can't
 // borrow directly for in-activity navigation.
-private const val PUSH_DURATION_MILLIS = 320
-private const val POP_DURATION_MILLIS = 360
+private const val PUSH_DURATION_MILLIS = 250
+private const val POP_DURATION_MILLIS = 280
 private val PushEasing = CubicBezierEasing(
     0.3f,
     0.7f,
@@ -285,13 +285,13 @@ internal fun TopLevelNavState.navigationTransition(
     ) {
         return fadeIn(
             animationSpec = tween(
-                durationMillis = 200,
+                durationMillis = 160,
                 easing = LinearEasing,
             ),
         ) togetherWith
             fadeOut(
                 animationSpec = tween(
-                    durationMillis = 200,
+                    durationMillis = 160,
                     easing = LinearEasing,
                 ),
             )
