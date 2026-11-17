@@ -116,7 +116,7 @@ private fun GesturePreferencesScreenContent(
                     icon = NextIcons.Sensitivity,
                     enabled = state.preferences.useSeekControls,
                     value = state.preferences.seekSensitivity,
-                    valueRange = 0.1f..2.0f,
+                    valueRange = 0.1f..1.5f,
                     onValueChange = {
                         onAction(GesturePreferencesUiEvent.UpdateSeekSensitivity(value = it))
                     },
