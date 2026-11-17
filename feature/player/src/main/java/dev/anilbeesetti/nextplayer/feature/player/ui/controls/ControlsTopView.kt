@@ -99,12 +99,6 @@ fun ControlsTopView(
                     maxLines = 1,
                 )
             }
-            PlayerButton(onClick = onPlaylistClick) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_playlist),
-                    contentDescription = null,
-                )
-            }
             PlayerButton(onClick = onAudioClick) {
                 Icon(
                     painter = painterResource(R.drawable.ic_audio_track),
