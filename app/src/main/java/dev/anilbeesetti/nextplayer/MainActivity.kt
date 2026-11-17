@@ -79,9 +79,9 @@ import dev.anilbeesetti.nextplayer.navigation.mediaNavGraph
 import dev.anilbeesetti.nextplayer.navigation.moreNavGraph
 import dev.anilbeesetti.nextplayer.navigation.navigationTransition
 import dev.anilbeesetti.nextplayer.navigation.navigationTransitionModifier
-import dev.anilbeesetti.nextplayer.navigation.networkNavGraph
-import dev.anilbeesetti.nextplayer.navigation.openPlaylist
-import dev.anilbeesetti.nextplayer.navigation.playlistNavGraph
+import dev.anilbeesetti.nextplayer.navigation.
+import dev.anilbeesetti.nextplayer.navigation.
+import dev.anilbeesetti.nextplayer.navigation.
 import dev.anilbeesetti.nextplayer.navigation.rememberTopLevelNavState
 import dev.anilbeesetti.nextplayer.navigation.settingsNavGraph
 import org.koin.android.ext.android.inject
@@ -164,34 +164,13 @@ installSplashScreen().setKeepOnScreenCondition {
                 ) {
                     val navState = rememberTopLevelNavState()
 
-                    LaunchedEffect(key1 = pendingPlaylistId) {
-                        pendingPlaylistId?.let { playlistId ->
-                            navState.openPlaylist(playlistId = playlistId)
-                            pendingPlaylistId = null
-                        }
-                    }
-
                     val mediaStack = navState.backStacks.getValue(TopLevelDestination.MEDIA.route)
-                    val playlistStack = navState.backStacks.getValue(
-                        TopLevelDestination.PLAYLISTS.route,
-                    )
-                    val networkStack = navState.backStacks.getValue(
-                        TopLevelDestination.NETWORK.route,
-                    )
                     val moreStack = navState.backStacks.getValue(TopLevelDestination.MORE.route)
 
                     val provider = entryProvider {
                         mediaNavGraph(
                             context = this@MainActivity,
                             backStack = mediaStack,
-                        )
-                        playlistNavGraph(
-                            context = this@MainActivity,
-                            backStack = playlistStack,
-                        )
-                        networkNavGraph(
-                            context = this@MainActivity,
-                            backStack = networkStack,
                         )
                         moreNavGraph(
                             context = this@MainActivity,
