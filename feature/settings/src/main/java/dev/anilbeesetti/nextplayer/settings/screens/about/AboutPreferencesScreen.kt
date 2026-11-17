@@ -61,18 +61,14 @@ import dev.anilbeesetti.nextplayer.core.common.extensions.appIcon
 import dev.anilbeesetti.nextplayer.core.ui.R
 import dev.anilbeesetti.nextplayer.core.ui.components.ClickablePreferenceItem
 import dev.anilbeesetti.nextplayer.core.ui.components.ListSectionTitle
+import dev.anilbeesetti.nextplayer.core.ui.components.LocalNavigationBottomPadding
 import dev.anilbeesetti.nextplayer.core.ui.components.NextTopAppBar
 import dev.anilbeesetti.nextplayer.core.ui.components.rememberTvListFocusRequester
 import dev.anilbeesetti.nextplayer.core.ui.components.tvFocusDown
 import dev.anilbeesetti.nextplayer.core.ui.components.tvListFocus
 import dev.anilbeesetti.nextplayer.core.ui.designsystem.NextIcons
-import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/anilbeesetti/nextplayer"
-private const val GITHUB_SPONSORS_URL = "https://github.com/sponsors/anilbeesetti"
-private const val KOFI_URL = "https://ko-fi.com/anilbeesetti"
-private const val PAYPAL_URL = "https://paypal.me/AnilBeesetti"
-private const val UPI_ID = "anilbeesetti10@oksbi"
 
 @Composable
 fun AboutPreferencesScreen(viewModel: AboutPreferencesViewModel) {
@@ -94,8 +90,6 @@ private fun AboutPreferencesScreenContent(
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
 
     val listFocusRequester = rememberTvListFocusRequester()
     Scaffold(
@@ -126,7 +120,10 @@ private fun AboutPreferencesScreenContent(
                 .tvListFocus(focusRequester = listFocusRequester)
                 .padding(paddingValues = innerPadding)
                 .padding(horizontal = 16.dp)
-                .padding(vertical = 16.dp),
+                .padding(
+                    top = 16.dp,
+                    bottom = LocalNavigationBottomPadding.current + 16.dp,
+                ),
         ) {
             AboutApp(
                 appVersion = state.appVersion,
@@ -139,128 +136,56 @@ private fun AboutPreferencesScreenContent(
                 onLibrariesClick = { onAction(AboutPreferencesAction.OpenLibraries) },
             )
             ListSectionTitle(text = stringResource(id = R.string.donate))
-            /*
             Column(
                 verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
             ) {
                 ClickablePreferenceItem(
-                    title = stringResource(R.string.github_sponsors),
-                    description = stringResource(
-                        R.string.support_the_developer_on,
-                        stringResource(R.string.github_sponsors),
-                    ),
-                    icon = ImageVector.vectorResource(R.drawable.ic_github),
+                    title = "アニメの世界",
+                    description = "A One-stop Solution for all Anime",
+                    icon = ImageVector.vectorResource(R.drawable.ic_site_anime),
                     onClick = {
                         uriHandler.openUriOrShowToast(
-                            uri = GITHUB_SPONSORS_URL,
+                            uri = "https://www.animedubhindi.link/",
                             context = context,
                         )
                     },
                     isFirstItem = true,
                 )
                 ClickablePreferenceItem(
-                    title = stringResource(R.string.kofi),
-                    description = stringResource(
-                        R.string.support_the_developer_on,
-                        stringResource(R.string.kofi),
-                    ),
-                    icon = ImageVector.vectorResource(R.drawable.ic_kofi),
+                    title = "4KHdHub l Daddys Choice 👑",
+                    description = "A Dynamite by the mix of Quality & Quantity",
+                    icon = ImageVector.vectorResource(R.drawable.ic_site_4khdhub),
                     onClick = {
                         uriHandler.openUriOrShowToast(
-                            uri = KOFI_URL,
+                            uri = "https://4khdhub.one/",
                             context = context,
                         )
                     },
                 )
                 ClickablePreferenceItem(
-                    title = stringResource(R.string.paypal),
-                    description = stringResource(
-                        R.string.support_the_developer_on,
-                        stringResource(R.string.paypal),
-                    ),
-                    icon = ImageVector.vectorResource(R.drawable.ic_paypal),
+                    title = "MovielinkBD",
+                    description = "People’s Love, Good as Fuck",
+                    icon = ImageVector.vectorResource(R.drawable.ic_site_movielink),
                     onClick = {
                         uriHandler.openUriOrShowToast(
-                            uri = PAYPAL_URL,
+                            uri = "https://movielinkbd.tv/",
                             context = context,
                         )
                     },
                 )
                 ClickablePreferenceItem(
-                    title = stringResource(R.string.upi),
-                    description = UPI_ID,
-                    icon = ImageVector.vectorResource(R.drawable.ic_upi),
+                    title = "OlA Movies",
+                    description = "The Quality you poors can't afford",
+                    icon = NextIcons.Play,
                     onClick = {
-                        scope.launch {
-                            clipboard.setClipEntry(
-                                clipEntry = ClipEntry(
-                                    ClipData.newPlainText(
-                                        "text",
-                                        UPI_ID,
-                                    ),
-                                ),
-                            )
-                            Toast.makeText(
-                                context,
-                                "copied to clipboard",
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                        }
+                        uriHandler.openUriOrShowToast(
+                            uri = "https://v6.olamovies.mov/",
+                            context = context,
+                        )
                     },
                     isLastItem = true,
                 )
             }
-            */
-Column(
-    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
-) {
-    ClickablePreferenceItem(
-    title = "アニメの世界",
-    description = "A One-stop Solution for all Anime",
-    icon = ImageVector.vectorResource(R.drawable.ic_site_anime),
-    onClick = {
-            uriHandler.openUriOrShowToast(
-                uri = "https://www.animedubhindi.link/",
-                context = context,
-            )
-        },
-        isFirstItem = true,
-    )
-    ClickablePreferenceItem(
-        title = "4KHdHub l Daddys Choice 👑",
-        description = "A Dynamite by the mix of Quality & Quantity",
-        icon = ImageVector.vectorResource(R.drawable.ic_site_4khdhub),
-        onClick = {
-            uriHandler.openUriOrShowToast(
-                uri = "https://4khdhub.one/",
-                context = context,
-            )
-        },
-    )
-    ClickablePreferenceItem(
-        title = "MovielinkBD",
-        description = "People’s Love, Good as Fuck",
-        icon = ImageVector.vectorResource(R.drawable.ic_site_movielink),
-        onClick = {
-            uriHandler.openUriOrShowToast(
-                uri = "https://movielinkbd.tv/",
-                context = context,
-            )
-        },
-    )
-    ClickablePreferenceItem(
-        title = "OlA Movies",
-        description = "The Quality you poors can't afford",
-        icon = NextIcons.Play,
-        onClick = {
-            uriHandler.openUriOrShowToast(
-                uri = "https://v6.olamovies.mov/",
-                context = context,
-            )
-        },
-        isLastItem = true,
-    )
-}
         }
     }
 }
@@ -366,7 +291,6 @@ fun AboutApp(
             }
         }
 
-        
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -408,12 +332,6 @@ fun AboutApp(
                 Text(text = stringResource(R.string.github))
             }
         }
-        /*
-Text(
-    text = "This is an ultimate video player designed to play all types of videos—not to play with your heart. So, feel free to enjoy it without any worries. 😘",
-    style = MaterialTheme.typography.bodyMedium,
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-) */
     }
 }
 
