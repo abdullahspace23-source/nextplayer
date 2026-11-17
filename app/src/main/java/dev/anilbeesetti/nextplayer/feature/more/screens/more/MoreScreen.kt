@@ -1,7 +1,5 @@
 package dev.anilbeesetti.nextplayer.feature.more.screens.more
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -79,10 +77,6 @@ internal fun MoreScreenContent(state: MoreUiState, onAction: (MoreAction) -> Uni
         TopLevelFabKey.MORE,
         NextIcons.Settings,
     ) { onAction(MoreAction.OpenSettings) }
-    val filePicker =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let { onAction(MoreAction.PlayVideo(it.toString())) }
-        }
 
     Scaffold(
         topBar = {
@@ -119,25 +113,13 @@ internal fun MoreScreenContent(state: MoreUiState, onAction: (MoreAction) -> Uni
                     ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    maxItemsInEachRow = 2,
-                ) {
-                    FilledTonalButton(
-                        modifier = Modifier.weight(weight = 1f).tvFocusRing(),
-                        onClick = { filePicker.launch(input = "video/*") },
+                if (MediaOperationsService.supportsTrash()) {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        maxItemsInEachRow = 2,
                     ) {
-                        Icon(
-                            imageVector = NextIcons.FileOpen,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Text(text = stringResource(R.string.pick_file))
-                    }
-                    if (MediaOperationsService.supportsTrash()) {
                         FilledTonalButton(
                             modifier = Modifier.weight(weight = 1f).tvFocusRing(),
                             onClick = { onAction(MoreAction.OpenTrash) },
@@ -150,6 +132,7 @@ internal fun MoreScreenContent(state: MoreUiState, onAction: (MoreAction) -> Uni
                             Spacer(modifier = Modifier.size(8.dp))
                             Text(text = stringResource(R.string.trash))
                         }
+                        Spacer(modifier = Modifier.weight(weight = 1f))
                     }
                 }
                 HistorySection(
