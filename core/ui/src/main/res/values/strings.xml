@@ -549,7 +549,7 @@
     </plurals>
     <string name="decoder_mode_auto">Auto</string>
     <string name="settings_description">App preferences</string>
-    <string name="more">More</string>
+    <string name="more">Others</string>
     <string name="new_label">NEW</string>
     <plurals name="new_videos_count">
         <item quantity="one">%1$d new video</item>
