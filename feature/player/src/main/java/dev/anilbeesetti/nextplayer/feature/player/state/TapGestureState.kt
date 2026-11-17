@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import dev.anilbeesetti.nextplayer.core.model.DoubleTapGesture
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -56,9 +58,11 @@ class TapGestureState(
 ) {
     var seekMillis by mutableLongStateOf(value = 0L)
     var isLongPressGestureInAction by mutableStateOf(value = false)
+    var activeLongPressSpeed by mutableFloatStateOf(value = longPressSpeed.coerceIn(0.25f, 4.0f))
 
     private var resetJob: Job? = null
     private var currentSpeed: Float = player.playbackParameters.speed
+    private var longPressDragPixels: Float = 0f
 
     fun handleDoubleTap(offset: Offset, size: IntSize) {
         if (!player.isCurrentMediaItemSeekable) return
@@ -121,12 +125,31 @@ class TapGestureState(
 
         isLongPressGestureInAction = true
         currentSpeed = player.playbackParameters.speed
-        player.setPlaybackSpeed(longPressSpeed)
+        longPressDragPixels = 0f
+        activeLongPressSpeed = longPressSpeed.coerceIn(0.25f, 4.0f)
+        player.setPlaybackSpeed(activeLongPressSpeed)
+    }
+
+    fun onLongPressDrag(dragAmountX: Float, containerWidth: Int) {
+        if (!isLongPressGestureInAction || containerWidth <= 0) return
+
+        longPressDragPixels += dragAmountX
+        val sensitivityWidth = containerWidth * 0.75f
+        val stepSize = 0.25f
+        val speedDelta = (longPressDragPixels / sensitivityWidth) * 3.75f
+        val baseSpeed = longPressSpeed.coerceIn(0.25f, 4.0f)
+        val rawSpeed = (baseSpeed + speedDelta).coerceIn(0.25f, 4.0f)
+        val snappedSpeed = ((rawSpeed / stepSize).roundToInt() * stepSize).coerceIn(0.25f, 4.0f)
+        if (snappedSpeed != activeLongPressSpeed) {
+            activeLongPressSpeed = snappedSpeed
+            player.setPlaybackSpeed(snappedSpeed)
+        }
     }
 
     fun handleOnLongPressRelease() {
         if (isLongPressGestureInAction) {
             isLongPressGestureInAction = false
+            longPressDragPixels = 0f
             player.setPlaybackSpeed(currentSpeed)
         }
     }
