@@ -246,22 +246,6 @@ fun ControlsBottomView(
                         contentDescription = null,
                     )
                 }
-                if (isPipSupported) {
-                    PlayerButton(onClick = onPictureInPictureClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_pip),
-                            contentDescription = null,
-                        )
-                    }
-                }
-                PlayerButton(onClick = onPlayInBackgroundClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_headset),
-                        contentDescription = null,
-                    )
-                }
-                LoopButton(player = player)
-                ShuffleButton(player = player)
                 if (useCompactControls) {
                     PlaybackSpeedButton(
                         player = player,
