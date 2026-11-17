@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
-import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 
 @UnstableApi
@@ -24,14 +23,5 @@ class MediaPresentationState(private val player: Player?) {
     var isBuffering: Boolean by mutableStateOf(value = false)
         private set
 
-    suspend fun observe() {
-        isBuffering = player?.playbackState == Player.STATE_BUFFERING
-
-        player?.listen { events ->
-            if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED)) {
-                this@MediaPresentationState.isBuffering =
-                    player.playbackState == Player.STATE_BUFFERING
-            }
-        }
-    }
+    suspend fun observe() {}
 }
