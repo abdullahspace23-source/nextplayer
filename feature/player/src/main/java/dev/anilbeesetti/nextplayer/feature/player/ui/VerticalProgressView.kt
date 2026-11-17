@@ -61,7 +61,6 @@ fun VerticalProgressView(
         modifier = modifier
             .heightIn(max = 250.dp)
             .clip(shape = CircleShape)
-            .background(MaterialTheme.colorScheme.background)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
