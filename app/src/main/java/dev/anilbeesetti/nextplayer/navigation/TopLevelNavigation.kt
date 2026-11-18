@@ -78,6 +78,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntOffset
@@ -114,8 +115,7 @@ enum class TopLevelDestination(
     val icon: ImageVector,
     @StringRes val labelRes: Int,
     val fabKey: String? = null,
-    val iconRes: Int? testTag
-    import androidx.compose.ui.res.painterResource
+    val iconRes: Int? = null,
 ) {
     MEDIA(
         MediaPickerRoute(),
