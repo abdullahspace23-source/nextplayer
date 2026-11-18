@@ -151,4 +151,330 @@ class MediaPickerViewModel(
 
             is MediaPickerAction.DismissMediaInfo -> stateInternal.update {
                 it.copy(mediaInfo = null)
+            is MediaPickerAction.CopySelectedItems -> transferSelectedItems(
+                action.selectionItems,
+                TransferMode.COPY,
+            )
+
+            is MediaPickerAction.MoveSelectedItems -> transferSelectedItems(
+                action.selectionItems,
+                TransferMode.MOVE,
+            )
+
+            is MediaPickerAction.CancelTransfer -> cancelTransfer()
+
+            is MediaPickerAction.RequestHideSelectedItems -> requestHideSelectedItems(
+                action.selectionItems,
+            )
+
+            is MediaPickerAction.SetVaultPinAndHide -> setVaultPinAndHide(action.pin)
+
+            is MediaPickerAction.CompleteBiometricSetup -> completeBiometricSetup(action.enabled)
+
+            is MediaPickerAction.ConfirmHidePendingItems -> confirmHidePendingItems()
+
+            is MediaPickerAction.DismissHideFlow -> stateInternal.update {
+                it.copy(hideFlow = HideFlowState.Idle)
             }
+
+            is MediaPickerAction.ShowAddToPlaylist -> showAddToPlaylist(action.selectionItems)
+
+            is MediaPickerAction.AddSelectionToPlaylist -> addSelectionToPlaylist(action.playlistId)
+
+            is MediaPickerAction.CreatePlaylistWithSelection -> createPlaylistWithSelection(
+                action.name,
+            )
+
+            is MediaPickerAction.DismissAddToPlaylist -> dismissAddToPlaylist()
+        }
+    }
+
+    private fun startMediaCollection() {
+        mediaSynchronizer.startSync()
+        collectMedia()
+    }
+
+    private fun collectMedia() {
+        mediaCollectJob?.cancel()
+        stateInternal.update { currentState ->
+            currentState.copy(mediaDataState = DataState.Loading)
+        }
+        mediaCollectJob = viewModelScope.launch {
+            launch {
+                getSortedMediaUseCase(folderPath).collect { media ->
+                    stateInternal.update {
+                        it.copy(mediaDataState = DataState.Success(value = media))
+                    }
+                }
+            }
+            launch {
+                getRecentlyPlayedVideoUseCase(folderPath).collect { recentlyPlayed ->
+                    stateInternal.update { it.copy(recentlyPlayedVideo = recentlyPlayed) }
+                }
+            }
+        }
+    }
+
+    private fun collectPreferences() {
+        viewModelScope.launch {
+            preferencesRepository.applicationPreferences.collect {
+                stateInternal.update { currentState -> currentState.copy(preferences = it) }
+            }
+        }
+    }
+
+    private fun collectPlaylists() {
+        viewModelScope.launch {
+            playlistRepository.observePlaylists().collect { playlists ->
+                stateInternal.update {
+                    it.copy(
+                        playlists = playlists.filter { playlist ->
+                            playlist.type == PlaylistType.LOCAL
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    private var pendingPlaylistVideos: List<Video> = emptyList()
+
+    private fun showAddToPlaylist(selectedItems: Set<SelectionItem>) {
+        stateInternal.update {
+            it.copy(
+                addToPlaylistState = AddToPlaylistState(
+                    isVisible = true,
+                    isSaving = true,
+                ),
+            )
+        }
+        viewModelScope.launch {
+            try {
+                val videos = selectedItems.toVideos()
+                pendingPlaylistVideos = videos
+                stateInternal.update {
+                    it.copy(
+                        addToPlaylistState = AddToPlaylistState(
+                            isVisible = true,
+                            hasVideos = videos.isNotEmpty(),
+                            errorRes = if (videos.isEmpty()) {
+                                R.string.playlist_selection_empty
+                            } else {
+                                null
+                            },
+                        ),
+                    )
+                }
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (_: Throwable) {
+                stateInternal.update {
+                    it.copy(
+                        addToPlaylistState = AddToPlaylistState(
+                            isVisible = true,
+                            errorRes = R.string.playlist_selection_read_failed,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun addSelectionToPlaylist(playlistId: Long) {
+        savePlaylistSelection {
+            playlistRepository.addVideos(
+                playlistId = playlistId,
+                videoUris = pendingPlaylistVideos.map(transform = Video::uriString),
+            )
+        }
+    }
+
+    private fun createPlaylistWithSelection(name: String) {
+        savePlaylistSelection {
+            playlistRepository.create(
+                name = name,
+                videoUris = pendingPlaylistVideos.map(transform = Video::uriString),
+            )
+            pendingPlaylistVideos.size
+        }
+    }
+
+    private fun savePlaylistSelection(block: suspend () -> Int) {
+        if (pendingPlaylistVideos.isEmpty() || stateInternal.value.addToPlaylistState.isSaving) {
+            return
+        }
+        stateInternal.update {
+            it.copy(
+                addToPlaylistState = it.addToPlaylistState.copy(
+                    isSaving = true,
+                    errorRes = null,
+                ),
+            )
+        }
+        viewModelScope.launch {
+            try {
+                val addedCount = block()
+                pendingPlaylistVideos = emptyList()
+                stateInternal.update { it.copy(addToPlaylistState = AddToPlaylistState()) }
+                showPlaylistItemsAddedToast(addedCount = addedCount)
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                stateInternal.update {
+                    it.copy(addToPlaylistState = it.addToPlaylistState.copy(isSaving = false))
+                }
+                throw error
+            } catch (_: Throwable) {
+                stateInternal.update {
+                    it.copy(
+                        addToPlaylistState = it.addToPlaylistState.copy(
+                            isSaving = false,
+                            errorRes = R.string.playlist_update_failed,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun dismissAddToPlaylist() {
+        if (stateInternal.value.addToPlaylistState.isSaving) return
+        pendingPlaylistVideos = emptyList()
+        stateInternal.update { it.copy(addToPlaylistState = AddToPlaylistState()) }
+    }
+
+    private fun showPlaylistItemsAddedToast(addedCount: Int) {
+        val message = if (addedCount == 0) {
+            systemService.getString(R.string.already_in_playlist)
+        } else {
+            systemService.getQuantityString(
+                R.plurals.added_videos_to_playlist,
+                quantity = addedCount,
+                addedCount,
+            )
+        }
+        systemService.showToast(
+            text = message,
+            Toast.LENGTH_SHORT,
+        )
+    }
+
+    private fun playSelectedItems(selectedItems: Set<SelectionItem>) {
+        viewModelScope.launch {
+            val videoUris = selectedItems.toVideoUris()
+            output.playVideos(videoUris)
+        }
+    }
+
+    private fun deleteSelectedItems(selectedItems: Set<SelectionItem>, permanently: Boolean) {
+        viewModelScope.launch {
+            val videoUris = selectedItems.toVideoUris()
+            mediaOperationsService.deleteMedia(
+                uris = videoUris,
+                permanently = permanently,
+            )
+        }
+    }
+
+    private fun shareSelectedItems(selectedItems: Set<SelectionItem>) {
+        viewModelScope.launch {
+            val videoUris = selectedItems.toVideoUris()
+            mediaOperationsService.shareMedia(uris = videoUris)
+        }
+    }
+
+    private fun transferSelectedItems(selectedItems: Set<SelectionItem>, mode: TransferMode) {
+        transferJob = viewModelScope.launch {
+            val activeJob = currentCoroutineContext()[Job]
+            val treeUri = systemService.pickFolder() ?: return@launch
+            val videoUris = selectedItems.toVideoUris()
+            if (videoUris.isEmpty()) return@launch
+
+            stateInternal.update {
+                it.copy(
+                    transferFlow = TransferFlowState.Processing(
+                        mode = mode,
+                        progress = TransferProgress(totalFiles = videoUris.size),
+                    ),
+                )
+            }
+
+            mediaOperationsService.transferMedia(
+                uris = videoUris,
+                folderUri = treeUri,
+                mode = mode,
+            ).catch { error ->
+                if (error is CancellationException) throw error
+                showTransferCompleteToast(
+                    mode = mode,
+                    result = TransferResult(
+                        succeeded = 0,
+                        failed = videoUris.size,
+                    ),
+                )
+            }.onCompletion {
+                if (transferJob === activeJob) {
+                    stateInternal.update { it.copy(transferFlow = TransferFlowState.Idle) }
+                }
+            }.collect { event ->
+                when (event) {
+                    is TransferEvent.Progress -> stateInternal.update {
+                        (it.transferFlow as? TransferFlowState.Processing)?.let { state ->
+                            it.copy(transferFlow = state.copy(progress = event.progress))
+                        } ?: it
+                    }
+
+                    is TransferEvent.Completed -> {
+                        stateInternal.update { it.copy(transferFlow = TransferFlowState.Idle) }
+                        showTransferCompleteToast(
+                            mode = mode,
+                            event.result,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showTransferCompleteToast(mode: TransferMode, result: TransferResult) {
+        val message = when {
+            result.sameFolderSkipped > 0 && result.succeeded == 0 && result.failed == 0 ->
+                systemService.getString(R.string.cannot_move_to_same_folder)
+
+            result.failed > 0 -> systemService.getQuantityString(
+                pluralsResId = if (mode == TransferMode.MOVE) {
+                    R.plurals.move_failed
+                } else {
+                    R.plurals.copy_failed
+                },
+                result.failed,
+                result.failed,
+            )
+
+            result.originalsNotDeleted -> systemService.getQuantityString(
+                R.plurals.moved_videos_originals_remain,
+                result.succeeded,
+                result.succeeded,
+            )
+
+            mode == TransferMode.MOVE -> systemService.getQuantityString(
+                R.plurals.moved_videos_result,
+                result.succeeded,
+                result.succeeded,
+            )
+
+            else -> systemService.getQuantityString(
+                R.plurals.copied_videos_result,
+                result.succeeded,
+                result.succeeded,
+            )
+        }
+        systemService.showToast(
+            text = message,
+            Toast.LENGTH_SHORT,
+        )
+    }
+
+    private fun cancelTransfer() {
+        transferJob?.cancel()
+        transferJob = null
+        stateInternal.update { it.copy(transferFlow = TransferFlowState.Idle) }
+    }
