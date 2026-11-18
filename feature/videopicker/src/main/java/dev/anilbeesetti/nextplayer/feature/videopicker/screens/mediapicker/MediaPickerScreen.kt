@@ -1348,6 +1348,14 @@ private fun SelectionActionsSheet(
                     title = stringResource(R.string.move),
                     onClick = onMoveAction,
                 )
+                                if (showHideAction) {
+                    SelectionAction(
+                        isTv = isTv,
+                        imageVector = NextIcons.HideSource,
+                        title = stringResource(id = R.string.hide),
+                        onClick = onHideAction,
+                    )
+                }
                 SelectionAction(
                     isTv = isTv,
                     imageVector = NextIcons.Delete,
