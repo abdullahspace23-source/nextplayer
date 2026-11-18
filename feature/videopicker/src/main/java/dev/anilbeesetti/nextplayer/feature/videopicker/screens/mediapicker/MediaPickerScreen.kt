@@ -801,4 +801,106 @@ private fun DeleteConfirmationDialog(
             }
         },
     )
-}                    shape = Mate
+}                    }
+
+@Composable
+private fun HideFlowDialogs(
+    hideFlow: HideFlowState,
+    onConfirmHide: () -> Unit,
+    onSetPinAndHide: (String) -> Unit,
+    onBiometricSetupComplete: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    when (hideFlow) {
+        HideFlowState.Idle -> Unit
+
+        HideFlowState.Processing -> {
+            VaultProgressDialog(message = stringResource(R.string.hiding_videos_in_progress))
+        }
+
+        is HideFlowState.ConfirmHide -> {
+            val count = hideFlow.items.size
+            NextDialog(
+                onDismissRequest = onDismiss,
+                title = {
+                    Text(
+                        text = if (count == 1) {
+                            stringResource(R.string.hide_one_video_confirmation)
+                        } else {
+                            stringResource(
+                                R.string.hide_videos_confirmation,
+                                count,
+                            )
+                        },
+                    )
+                },
+                content = { Text(text = stringResource(R.string.hide_video_info)) },
+                confirmButton = {
+                    TextButton(onClick = onConfirmHide) {
+                        Text(text = stringResource(R.string.hide))
+                    }
+                },
+                dismissButton = { CancelButton(onClick = onDismiss) },
+            )
+        }
+
+        is HideFlowState.SetupPin -> {
+            SetupVaultPinDialog(
+                onDismiss = onDismiss,
+                onPinConfirmed = onSetPinAndHide,
+            )
+        }
+
+        HideFlowState.BiometricSetup -> VaultBiometricSetupDialog(
+            onComplete = onBiometricSetupComplete,
+        )
+    }
+}
+
+@Composable
+private fun SetupVaultPinDialog(onDismiss: () -> Unit, onPinConfirmed: (String) -> Unit) {
+    var firstPin: String? by rememberSaveable { mutableStateOf(value = null) }
+    var currentPin by rememberSaveable { mutableStateOf(value = "") }
+    var errorCount by rememberSaveable { mutableStateOf(value = 0) }
+
+    val isConfirmStep = firstPin != null
+    val showError = errorCount > 0
+
+    val context = LocalContext.current
+    val isTv = remember { context.isTelevision }
+
+    val onDigit: (Char) -> Unit = { digit ->
+        if (currentPin.length < VAULT_PIN_LENGTH) {
+            currentPin += digit
+            if (currentPin.length == VAULT_PIN_LENGTH) {
+                val pinJustEntered = currentPin
+                if (!isConfirmStep) {
+                    firstPin = pinJustEntered
+                    currentPin = ""
+                    errorCount = 0
+                } else if (pinJustEntered == firstPin) {
+                    onPinConfirmed(pinJustEntered)
+                } else {
+                    errorCount++
+                    currentPin = ""
+                }
+            }
+        }
+    }
+    val onBackspace: () -> Unit = {
+        if (currentPin.isNotEmpty()) currentPin = currentPin.dropLast(n = 1)
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = !isTv),
+    ) {
+        Surface(
+            modifier = if (isTv) {
+                Modifier.fillMaxWidth(
+                    fraction = 0.72f,
+                )
+            } else {
+                Modifier.fillMaxWidth()
+            },
+            shape = MaterialTheme
