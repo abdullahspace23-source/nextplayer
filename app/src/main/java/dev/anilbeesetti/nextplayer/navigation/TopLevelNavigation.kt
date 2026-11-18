@@ -571,11 +571,19 @@ fun NavigationView(
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 },
                             ) {
-                                Icon(
-                                    imageVector = destination.icon,
-                                    contentDescription = stringResource(destination.labelRes),
-                                    modifier = Modifier.size(24.dp),
-                                )
+                                                                if (destination.iconRes != null) {
+                                    Icon(
+                                        painter = painterResource(destination.iconRes),
+                                        contentDescription = stringResource(destination.labelRes),
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = destination.icon,
+                                        contentDescription = stringResource(destination.labelRes),
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                }
                             }
                         }
                     }
@@ -628,11 +636,19 @@ fun NextNavigationRail(state: TopLevelNavState, modifier: Modifier = Modifier) {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },
                     ) {
-                        Icon(
-                            imageVector = dest.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                        )
+                                                if (dest.iconRes != null) {
+                            Icon(
+                                painter = painterResource(dest.iconRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        } else {
+                            Icon(
+                                imageVector = dest.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
                     }
                 }
             }
