@@ -903,4 +903,300 @@ private fun SetupVaultPinDialog(onDismiss: () -> Unit, onPinConfirmed: (String) 
             } else {
                 Modifier.fillMaxWidth()
             },
-            shape = MaterialTheme
+            @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SelectionActionsSheetOld(
+    modifier: Modifier = Modifier,
+    show: Boolean,
+    contentFocusRequester: FocusRequester,
+    showRenameAction: Boolean,
+    showInfoAction: Boolean,
+    showHideAction: Boolean,
+    onPlayAction: () -> Unit,
+    onAddToPlaylistAction: () -> Unit,
+    onRenameAction: () -> Unit,
+    onShareAction: () -> Unit,
+    onCopyAction: () -> Unit,
+    onMoveAction: () -> Unit,
+    onInfoAction: () -> Unit,
+    onHideAction: () -> Unit,
+    onDeleteAction: () -> Unit,
+) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTelevision }
+    val firstActionFocusRequester = remember { FocusRequester() }
+    AnimatedVisibility(
+        modifier = modifier.windowInsetsPadding(
+            WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal),
+        ),
+        visible = show,
+        enter = slideInVertically { it },
+        exit = slideOutVertically { it },
+    ) {
+        val shape = MaterialTheme.shapes.largeIncreased.copy(
+            bottomStart = ZeroCornerSize,
+            bottomEnd = ZeroCornerSize,
+        )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        shape = shape,
+                    )
+                    .clip(shape = shape)
+                    .horizontalScroll(state = rememberScrollState())
+                    .thenIf(condition = isTv) {
+                        focusRestorer(fallback = firstActionFocusRequester).focusGroup()
+                            .focusProperties { up = contentFocusRequester }
+                    }
+                    .navigationBarsPadding()
+                    .padding(
+                        horizontal = 8.dp,
+                        vertical = 12.dp,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                SelectionAction(
+                    modifier = Modifier.thenIf(condition = isTv) {
+                        focusRequester(focusRequester = firstActionFocusRequester)
+                    },
+                    isTv = isTv,
+                    imageVector = NextIcons.Play,
+                    title = stringResource(R.string.play),
+                    onClick = onPlayAction,
+                )
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.PlaylistAdd,
+                    title = stringResource(R.string.add_to_playlist),
+                    onClick = onAddToPlaylistAction,
+                )
+                if (showRenameAction) {
+                    SelectionAction(
+                        isTv = isTv,
+                        imageVector = NextIcons.Edit,
+                        title = stringResource(R.string.rename),
+                        onClick = onRenameAction,
+                    )
+                }
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Share,
+                    title = stringResource(R.string.share),
+                    onClick = onShareAction,
+                )
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Copy,
+                    title = stringResource(R.string.copy),
+                    onClick = onCopyAction,
+                )
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Move,
+                    title = stringResource(R.string.move),
+                    onClick = onMoveAction,
+                )
+                if (showInfoAction) {
+                    SelectionAction(
+                        isTv = isTv,
+                        imageVector = NextIcons.Info,
+                        title = stringResource(id = R.string.info),
+                        onClick = onInfoAction,
+                    )
+                }
+                if (showHideAction) {
+                    SelectionAction(
+                        isTv = isTv,
+                        imageVector = NextIcons.HideSource,
+                        title = stringResource(id = R.string.hide),
+                        onClick = onHideAction,
+                    )
+                }
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Delete,
+                    title = stringResource(id = R.string.delete),
+                    onClick = onDeleteAction,
+                )
+            }
+        }
+    }
+}
+
+@Suppress("UNUSED_PARAMETER")
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SelectionActionsSheet(
+    modifier: Modifier = Modifier,
+    show: Boolean,
+    contentFocusRequester: FocusRequester,
+    showRenameAction: Boolean,
+    showInfoAction: Boolean,
+    showHideAction: Boolean,
+    onPlayAction: () -> Unit,
+    onAddToPlaylistAction: () -> Unit,
+    onRenameAction: () -> Unit,
+    onShareAction: () -> Unit,
+    onCopyAction: () -> Unit,
+    onMoveAction: () -> Unit,
+    onInfoAction: () -> Unit,
+    onHideAction: () -> Unit,
+    onDeleteAction: () -> Unit,
+) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTelevision }
+    val firstActionFocusRequester = remember { FocusRequester() }
+    AnimatedVisibility(
+        modifier = modifier.windowInsetsPadding(
+            WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal),
+        ),
+        visible = show,
+        enter = slideInVertically { it },
+        exit = slideOutVertically { it },
+    ) {
+        val shape = MaterialTheme.shapes.largeIncreased.copy(
+            bottomStart = ZeroCornerSize,
+            bottomEnd = ZeroCornerSize,
+        )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        shape = shape,
+                    )
+                    .clip(shape = shape)
+                    .horizontalScroll(state = rememberScrollState())
+                    .thenIf(condition = isTv) {
+                        focusRestorer(fallback = firstActionFocusRequester).focusGroup()
+                            .focusProperties { up = contentFocusRequester }
+                    }
+                    .navigationBarsPadding()
+                    .padding(
+                        horizontal = 8.dp,
+                        vertical = 12.dp,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                if (showRenameAction) {
+                    SelectionAction(
+                        isTv = isTv,
+                        imageVector = NextIcons.Edit,
+                        title = stringResource(R.string.rename),
+                        onClick = onRenameAction,
+                    )
+                }
+                SelectionAction(
+                    modifier = Modifier.thenIf(condition = isTv) {
+                        focusRequester(focusRequester = firstActionFocusRequester)
+                    },
+                    isTv = isTv,
+                    imageVector = NextIcons.Share,
+                    title = stringResource(R.string.share),
+                    onClick = onShareAction,
+                )
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Move,
+                    title = stringResource(R.string.move),
+                    onClick = onMoveAction,
+                )
+                SelectionAction(
+                    isTv = isTv,
+                    imageVector = NextIcons.Delete,
+                    title = stringResource(id = R.string.delete),
+                    onClick = onDeleteAction,
+                )
+            }
+        }
+    }
+}
+
+@PreviewScreenSizes
+@PreviewLightDark
+@Composable
+private fun MediaPickerScreenPreview(
+    @PreviewParameter(VideoPickerPreviewParameterProvider::class)
+    videos: List<Video>,
+) {
+    NextPlayerTheme {
+        MediaPickerScreenContent(
+            state = MediaPickerUiState(
+                folderName = null,
+                mediaDataState = DataState.Success(
+                    value = MediaHolder(
+                        folders = listOf(
+                            Folder(
+                                name = "Folder 1",
+                                path = "/root/folder1",
+                                dateModified = System.currentTimeMillis(),
+                            ),
+                            Folder(
+                                name = "Folder 2",
+                                path = "/root/folder2",
+                                dateModified = System.currentTimeMillis(),
+                            ),
+                        ),
+                        videos = videos,
+                    ),
+                ),
+                preferences = ApplicationPreferences().copy(
+                    mediaViewMode = MediaViewMode.FOLDER_TREE,
+                    mediaLayoutMode = MediaLayoutMode.GRID,
+                ),
+            ),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ButtonPreview() {
+    Surface {
+        TextIconToggleButton(
+            text = "Title",
+            icon = NextIcons.Title,
+            onClick = {},
+        )
+    }
+}
+
+@DayNightPreview
+@Composable
+private fun MediaPickerNoVideosFoundPreview() {
+    NextPlayerTheme {
+        Surface {
+            MediaPickerScreenContent(
+                state = MediaPickerUiState(
+                    folderName = null,
+                    mediaDataState = DataState.Success(value = null),
+                    preferences = ApplicationPreferences(),
+                ),
+            )
+        }
+    }
+}
+
+@DayNightPreview
+@Composable
+private fun MediaPickerLoadingPreview() {
+    NextPlayerTheme {
+        Surface {
+            MediaPickerScreenContent(
+                state = MediaPickerUiState(
+                    folderName = null,
+                    mediaDataState = DataState.Loading,
+                    preferences = ApplicationPreferences(),
+                ),
+            )
+        }
+    }
+}
