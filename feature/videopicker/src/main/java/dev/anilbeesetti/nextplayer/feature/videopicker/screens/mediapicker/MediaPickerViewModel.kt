@@ -151,6 +151,7 @@ class MediaPickerViewModel(
 
             is MediaPickerAction.DismissMediaInfo -> stateInternal.update {
                 it.copy(mediaInfo = null)
+            }
             is MediaPickerAction.CopySelectedItems -> transferSelectedItems(
                 action.selectionItems,
                 TransferMode.COPY,
