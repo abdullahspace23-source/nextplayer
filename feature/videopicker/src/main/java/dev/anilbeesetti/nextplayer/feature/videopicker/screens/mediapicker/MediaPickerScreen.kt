@@ -141,7 +141,7 @@ fun MediaPickerScreen(viewModel: MediaPickerViewModel) {
 
     MediaPickerScreenContent(
         state = state,
-        onAction = viewModel::onAction,
+        { viewModel.onAction(it) }
     )
 }
 
