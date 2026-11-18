@@ -114,6 +114,8 @@ enum class TopLevelDestination(
     val icon: ImageVector,
     @StringRes val labelRes: Int,
     val fabKey: String? = null,
+    val iconRes: Int? testTag
+    import androidx.compose.ui.res.painterResource
 ) {
     MEDIA(
         MediaPickerRoute(),
@@ -129,7 +131,8 @@ enum class TopLevelDestination(
     ABOUT(
         AboutPreferencesRoute,
         NextIcons.Info,
-        R.string.more,
+        R.string.about_name,
+        iconRes = R.drawable.ic_magic,
     ),
     MORE(
         MoreRoute,
