@@ -176,7 +176,7 @@ private fun AboutPreferencesScreenContent(
                 ClickablePreferenceItem(
                     title = "OlA Movies",
                     description = "The Quality you poors can't afford",
-                    icon = NextIcons.Play,
+                    icon = ImageVector.vectorResource(R.drawable.ic_site_olamovies),
                     onClick = {
                         uriHandler.openUriOrShowToast(
                             uri = "https://v6.olamovies.mov/",
