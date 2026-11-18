@@ -123,16 +123,16 @@ enum class TopLevelDestination(
         R.string.home,
         TopLevelFabKey.MEDIA,
     ),
-    VAULT(
-        VaultRoute,
-        NextIcons.Lock,
-        R.string.vault,
-    ),
-    ABOUT(
-        AboutPreferencesRoute,
-        NextIcons.Info,
-        R.string.about_name,
-        iconRes = R.drawable.ic_magic,
+            ABOUT(
+            AboutPreferencesRoute,
+            NextIcons.Info,
+            R.string.about_name,
+            iconRes = R.drawable.ic_magic,
+        ),
+        VAULT(
+            VaultRoute,
+            NextIcons.Lock,
+            R.string.vault,
     ),
     MORE(
         MoreRoute,
