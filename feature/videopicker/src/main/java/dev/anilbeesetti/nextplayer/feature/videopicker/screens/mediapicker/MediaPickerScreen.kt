@@ -801,7 +801,7 @@ private fun DeleteConfirmationDialog(
             }
         },
     )
-}                    }
+}                    
 
 @Composable
 private fun HideFlowDialogs(
@@ -903,6 +903,281 @@ private fun SetupVaultPinDialog(onDismiss: () -> Unit, onPinConfirmed: (String) 
             } else {
                 Modifier.fillMaxWidth()
             },
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainer,
+        ) {
+            if (isTv) {
+                // Landscape TV: info on the left, keypad on the right so it fits a short screen.
+                Row(
+                    modifier = Modifier.padding(24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    SetupPinHeader(
+                        modifier = Modifier.weight(weight = 1f),
+                        isConfirmStep = isConfirmStep,
+                        filledCount = currentPin.length,
+                        showError = showError,
+                    )
+                    Column(
+                        modifier = Modifier.weight(weight = 1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        PinKeypad(
+                            modifier = Modifier.widthIn(max = 300.dp),
+                            onDigit = onDigit,
+                            onBackspace = onBackspace,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        CancelButton(onClick = onDismiss)
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 24.dp,
+                            vertical = 28.dp,
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    SetupPinHeader(
+                        isConfirmStep = isConfirmStep,
+                        filledCount = currentPin.length,
+                        showError = showError,
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    PinKeypad(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        onDigit = onDigit,
+                        onBackspace = onBackspace,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    CancelButton(onClick = onDismiss)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SetupPinHeader(
+    isConfirmStep: Boolean,
+    filledCount: Int,
+    showError: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Lock icon — matches the vault PIN screen's icon box
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.large)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(20.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = NextIcons.Lock,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp),
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = if (isConfirmStep) {
+                stringResource(R.string.confirm_vault_pin)
+            } else {
+                stringResource(R.string.set_vault_pin)
+            },
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = if (isConfirmStep) {
+                stringResource(R.string.confirm_vault_pin_description)
+            } else {
+                stringResource(R.string.set_vault_pin_description)
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        PinDotsIndicator(
+            filledCount = filledCount,
+            error = showError,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        if (showError) {
+            Text(
+                text = stringResource(R.string.pins_do_not_match),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlaylistTargetDialog(
+    playlists: List<PlaylistSummary>,
+    state: AddToPlaylistState,
+    onDismissRequest: () -> Unit,
+    onPlaylistSelected: (Long) -> Unit,
+    onCreatePlaylist: (String) -> Unit,
+) {
+    var showCreateDialog by rememberSaveable { mutableStateOf(value = false) }
+
+    if (showCreateDialog) {
+        var name by rememberSaveable { mutableStateOf(value = "") }
+        val trimmedName = name.trim()
+        NextDialog(
+            onDismissRequest = {
+                if (!state.isSaving) showCreateDialog = false
+            },
+            title = { Text(text = stringResource(R.string.create_new_playlist)) },
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    NextOutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(text = stringResource(R.string.playlist_name)) },
+                        enabled = !state.isSaving,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    state.errorRes?.let { errorRes ->
+                        Text(
+                            text = stringResource(id = errorRes),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { onCreatePlaylist(trimmedName) },
+                    enabled = !state.isSaving && state.hasVideos && trimmedName.isNotEmpty(),
+                    modifier = Modifier.tvFocusRing(),
+                ) { Text(text = stringResource(R.string.create)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { if (!state.isSaving) showCreateDialog = false },
+                    enabled = !state.isSaving,
+                    modifier = Modifier.tvFocusRing(),
+                ) { Text(text = stringResource(R.string.cancel)) }
+            },
+        )
+        return
+    }
+
+    NextDialog(
+        onDismissRequest = {
+            if (!state.isSaving) onDismissRequest()
+        },
+        title = { Text(text = stringResource(R.string.choose_playlist)) },
+        content = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = { showCreateDialog = true },
+                    enabled = !state.isSaving,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .tvFocusRing(),
+                ) {
+                    Icon(
+                        NextIcons.Add,
+                        contentDescription = null,
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(R.string.create_new_playlist),
+                        modifier = Modifier.weight(weight = 1f),
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.existing_playlists),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
+                    if (playlists.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.no_playlists),
+                                modifier = Modifier.padding(12.dp),
+                            )
+                        }
+                    }
+                    items(
+                        items = playlists,
+                        key = PlaylistSummary::id,
+                    ) { playlist ->
+                        TextButton(
+                            onClick = { onPlaylistSelected(playlist.id) },
+                            enabled = !state.isSaving && state.hasVideos,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .tvFocusRing(),
+                        ) {
+                            Icon(
+                                imageVector = NextIcons.Playlist,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.size(8.dp))
+                            Column(
+                                modifier = Modifier.weight(weight = 1f),
+                                horizontalAlignment = Alignment.Start,
+                            ) {
+                                Text(
+                                    text = playlist.name,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = pluralStringResource(
+                                        R.plurals.playlist_video_count,
+                                        playlist.itemCount,
+                                        playlist.itemCount,
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+                state.errorRes?.let { errorRes ->
+                    Text(
+                        text = stringResource(id = errorRes),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                if (state.isSaving) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(
+                onClick = onDismissRequest,
+                enabled = !state.isSaving,
+                modifier = Modifier.tvFocusRing(),
+            ) { Text(text = stringResource(R.string.cancel)) }
+        },
+    )
+}
             @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SelectionActionsSheetOld(
