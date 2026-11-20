@@ -750,4 +750,64 @@ class LocalMediaOperationsService(private val context: Context) : MediaOperation
             }
         }
     }.getOrNull() ?: false
+   
+    override suspend fun renameFolder(
+        oldPath: String,
+        newName: String,
+        uris: List<Uri>,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val trimmed = newName.trim()
+        if (trimmed.isEmpty() || trimmed == "." || trimmed == ".." || trimmed.contains('/') || trimmed.contains('\\')) {
+            return@withContext false
+        }
+        val oldDir = File(oldPath)
+        val parentDir = oldDir.parentFile ?: return@withContext false
+        val newDir = File(parentDir, trimmed)
+        if (!oldDir.exists() || !oldDir.isDirectory || newDir.exists()) {
+            return@withContext false
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val mediaStoreUris = uris.filter { it.scheme == "content" }
+            if (mediaStoreUris.isEmpty()) {
+                return@withContext oldDir.renameTo(newDir)
+            }
+            if (!requestWriteAccessR(mediaStoreUris)) {
+                return@withContext false
+            }
+            val storageRoot = Environment.getExternalStorageDirectory().absolutePath.trimEnd('/')
+            var anyUpdated = false
+            mediaStoreUris.forEach { uri ->
+                val filePath = context.getPath(uri) ?: return@forEach
+                val fileParent = File(filePath).parentFile?.absolutePath ?: return@forEach
+                val subSuffix = fileParent.removePrefix(oldDir.absolutePath).trimStart('/')
+                val newParentPath = if (subSuffix.isEmpty()) newDir.absolutePath else "${newDir.absolutePath}/$subSuffix"
+                val newRelativePath = newParentPath.removePrefix(storageRoot).trimStart('/') + "/"
+                val updated = contentResolver.updateMedia(
+                    uri = uri,
+                    contentValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, newRelativePath)
+                    },
+                )
+                if (updated) anyUpdated = true
+            }
+            oldDir.walkBottomUp().forEach {
+                if (it.isDirectory && it.listFiles()?.isEmpty() == true) it.delete()
+            }
+            anyUpdated
+        } else {
+            if (!oldDir.renameTo(newDir)) return@withContext false
+            uris.forEach { uri ->
+                val oldFilePath = context.getPath(uri) ?: return@forEach
+                val newFilePath = newDir.absolutePath + oldFilePath.removePrefix(oldDir.absolutePath)
+                contentResolver.updateMedia(
+                    uri = uri,
+                    contentValues = ContentValues().apply {
+                        put(MediaStore.Files.FileColumns.DATA, newFilePath)
+                    },
+                )
+            }
+            true
+        }
+    }
 }
